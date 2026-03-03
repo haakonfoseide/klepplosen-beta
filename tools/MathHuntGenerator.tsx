@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { supabase } from '../services/storageService';
-import { Play, Users, Trophy, X, RefreshCw, Activity, AlertTriangle, CheckCircle2, Calculator } from 'lucide-react';
+import { Play, Users, Trophy, X, RefreshCw, Activity, AlertTriangle, CheckCircle2, Calculator, Settings, ArrowRight, Sparkles, BrainCircuit } from 'lucide-react';
 import { TimerComponent } from '../CommonComponents';
 import QRCode from 'react-qr-code';
 
@@ -14,12 +14,15 @@ interface MathHuntGeneratorProps {
 
 export const MathHuntGenerator: React.FC<MathHuntGeneratorProps> = ({ t, language, currentUser }) => {
     const [step, setStep] = useState<'config' | 'lobby' | 'active' | 'summary'>('config');
+    const [mode, setMode] = useState<'standard' | 'custom'>('standard');
     const [topic, setTopic] = useState('addition');
     const [customTopic, setCustomTopic] = useState('');
-    const [startLevel, setStartLevel] = useState(1);
+    const [grade, setGrade] = useState('5. trinn');
     const [session, setSession] = useState<any>(null);
     const [players, setPlayers] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    const GRADES = ['1. trinn', '2. trinn', '3. trinn', '4. trinn', '5. trinn', '6. trinn', '7. trinn', '8. trinn', '9. trinn', '10. trinn'];
 
     const fetchPlayers = useCallback(async (sessionId: string) => {
         const { data } = await supabase.from('quiz_players').select('*').eq('session_id', sessionId);
@@ -33,14 +36,22 @@ export const MathHuntGenerator: React.FC<MathHuntGeneratorProps> = ({ t, languag
                 schema: 'public',
                 table: 'quiz_players',
                 filter: `session_id=eq.${sessionId}` 
-            }, () => {
-                fetchPlayers(sessionId);
+            }, (payload: any) => {
+                if (payload.eventType === 'INSERT') {
+                    setPlayers(prev => [...prev, payload.new]);
+                } else if (payload.eventType === 'UPDATE') {
+                    setPlayers(prev => prev.map(p => p.id === payload.new.id ? payload.new : p));
+                } else if (payload.eventType === 'DELETE') {
+                    setPlayers(prev => prev.filter(p => p.id !== payload.old.id));
+                }
             })
             .subscribe();
         return () => { supabase.removeChannel(channel); };
-    }, [fetchPlayers]);
+    }, []);
 
     const handleCreateSession = async () => {
+        if (mode === 'custom' && !customTopic.trim()) return;
+        
         setIsLoading(true);
         const pin = Math.floor(100000 + Math.random() * 900000).toString();
         
@@ -52,8 +63,8 @@ export const MathHuntGenerator: React.FC<MathHuntGeneratorProps> = ({ t, languag
                 quiz_data: [],
                 config: { 
                     playMode: 'math_hunt', 
-                    topic: topic === 'custom' ? customTopic : topic,
-                    startLevel
+                    topic: mode === 'custom' ? customTopic : topic,
+                    grade: grade
                 }
             }).select().single();
 
@@ -100,38 +111,60 @@ export const MathHuntGenerator: React.FC<MathHuntGeneratorProps> = ({ t, languag
                     <div className="space-y-4">
                         <div className="space-y-2">
                             <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Tema</label>
-                            <select 
-                                value={topic} 
-                                onChange={(e) => setTopic(e.target.value)}
-                                className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all"
-                            >
-                                <option value="addition">Addisjon</option>
-                                <option value="subtraction">Subtraksjon</option>
-                                <option value="multiplication">Multiplikasjon</option>
-                                <option value="division">Divisjon</option>
-                                <option value="mixed">Blandet</option>
-                                <option value="custom">Eget tema (AI)</option>
-                            </select>
-                            {topic === 'custom' && (
-                                <input 
-                                    type="text" 
-                                    value={customTopic} 
-                                    onChange={(e) => setCustomTopic(e.target.value)}
-                                    placeholder="Skriv inn tema (f.eks. Brøk, Geometri...)"
-                                    className="w-full p-4 mt-2 bg-white border-2 border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all"
-                                />
+                            
+                            <div className="flex gap-2 p-1 bg-slate-100 rounded-xl mb-2">
+                                <button 
+                                    onClick={() => setMode('standard')}
+                                    className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 ${mode === 'standard' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    <Calculator size={16} /> Standard
+                                </button>
+                                <button 
+                                    onClick={() => setMode('custom')}
+                                    className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 ${mode === 'custom' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    <Sparkles size={16} /> Eget Tema (AI)
+                                </button>
+                            </div>
+
+                            {mode === 'standard' ? (
+                                <select 
+                                    value={topic} 
+                                    onChange={(e) => setTopic(e.target.value)}
+                                    className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all"
+                                >
+                                    <option value="addition">Addisjon</option>
+                                    <option value="subtraction">Subtraksjon</option>
+                                    <option value="multiplication">Multiplikasjon</option>
+                                    <option value="division">Divisjon</option>
+                                    <option value="mixed">Blandet</option>
+                                </select>
+                            ) : (
+                                <div className="relative animate-in fade-in zoom-in-95">
+                                    <input 
+                                        type="text" 
+                                        value={customTopic} 
+                                        onChange={(e) => setCustomTopic(e.target.value)}
+                                        placeholder="Skriv inn tema (f.eks. Brøk, Geometri, Minecraft...)"
+                                        className="w-full p-4 pl-12 bg-white border-2 border-indigo-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all"
+                                        autoFocus
+                                    />
+                                    <BrainCircuit className="absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-400" size={20} />
+                                </div>
                             )}
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Startnivå (1-10)</label>
-                            <input 
-                                type="number" 
-                                min="1" max="10"
-                                value={startLevel} 
-                                onChange={(e) => setStartLevel(parseInt(e.target.value) || 1)}
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Trinn</label>
+                            <select 
+                                value={grade} 
+                                onChange={(e) => setGrade(e.target.value)}
                                 className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all"
-                            />
+                            >
+                                {GRADES.map(g => (
+                                    <option key={g} value={g}>{g}</option>
+                                ))}
+                            </select>
                         </div>
 
                         <Button 
@@ -139,9 +172,9 @@ export const MathHuntGenerator: React.FC<MathHuntGeneratorProps> = ({ t, languag
                             disabled={isLoading} 
                             className="w-full mt-4" 
                             size="lg" 
-                            icon={Play}
+                            icon={ArrowRight}
                         >
-                            {isLoading ? 'Oppretter...' : 'Start MatteJakt'}
+                            {isLoading ? 'Oppretter...' : 'Gå til Lobby'}
                         </Button>
                     </div>
                 </div>
@@ -152,32 +185,71 @@ export const MathHuntGenerator: React.FC<MathHuntGeneratorProps> = ({ t, languag
     if (step === 'lobby') {
         const joinUrl = `${window.location.origin}?view=join&pin=${session?.pin_code}`;
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-12 animate-in zoom-in-95">
-                <div className="text-center space-y-6">
-                    <h2 className="text-2xl font-black uppercase tracking-widest text-slate-400">Bli med på MatteJakt</h2>
-                    <div className="bg-white p-8 rounded-[3rem] shadow-2xl border-4 border-indigo-50 inline-block">
-                        <QRCode value={joinUrl} size={300} className="mx-auto" />
-                    </div>
-                    <p className="text-slate-500 font-medium text-lg">Scan koden med kameraet på iPaden</p>
-                    <p className="text-slate-400 text-sm">Eller gå til klepplosen.no og bruk kode: <span className="font-black text-slate-700">{session?.pin_code}</span></p>
+            <div className="flex flex-col items-center justify-center min-h-[70vh] space-y-12 animate-in zoom-in-95">
+                {/* Header */}
+                <div className="absolute top-8 left-8 flex items-center gap-4">
+                     <div className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg">
+                        <Calculator size={24} />
+                     </div>
+                     <div>
+                        <h2 className="text-xl font-black uppercase tracking-tight text-slate-900">MatteJakt Lobby</h2>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tema: {topic === 'custom' ? customTopic : topic} • {grade}</p>
+                     </div>
                 </div>
 
-                <div className="w-full max-w-4xl space-y-6">
-                    <div className="flex justify-between items-center px-4">
-                        <div className="flex items-center gap-3">
-                            <Users className="text-indigo-500" />
-                            <span className="text-xl font-black text-slate-700">{players.length} Elever</span>
+                <div className="flex flex-col md:flex-row items-center gap-16">
+                    {/* QR Code Section */}
+                    <div className="text-center space-y-8">
+                        <div className="bg-white p-8 rounded-[3rem] shadow-2xl border-4 border-indigo-50 inline-block transform hover:scale-105 transition-transform duration-500">
+                            <QRCode value={joinUrl} size={300} className="mx-auto" />
                         </div>
-                        <Button onClick={handleStartGame} disabled={players.length === 0} size="lg" icon={Play}>
-                            Start Jakt
-                        </Button>
+                        <div className="space-y-2">
+                            <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">Gå til klepplosen.no</p>
+                            <div className="text-6xl font-black text-slate-900 tracking-tighter">{session?.pin_code}</div>
+                        </div>
                     </div>
-                    <div className="flex flex-wrap gap-3 justify-center">
-                        {players.map(p => (
-                            <div key={p.id} className="px-6 py-3 bg-white rounded-2xl shadow-sm border border-slate-100 font-bold text-slate-700 animate-in slide-in-from-bottom-4">
-                                {p.nickname}
+
+                    {/* Players List */}
+                    <div className="w-full max-w-md h-[500px] flex flex-col">
+                        <div className="flex justify-between items-end mb-6 border-b border-slate-200 pb-4">
+                            <div className="flex items-center gap-3">
+                                <Users className="text-indigo-500" size={28} />
+                                <span className="text-3xl font-black text-slate-900">{players.length}</span>
+                                <span className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-2">Elever klare</span>
                             </div>
-                        ))}
+                        </div>
+                        
+                        <div className="flex-grow overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                            {players.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4 border-2 border-dashed border-slate-200 rounded-3xl">
+                                    <Users size={48} className="opacity-50" />
+                                    <p className="font-bold text-sm uppercase tracking-widest">Venter på elever...</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-3">
+                                    {players.map(p => (
+                                        <div key={p.id} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm border border-slate-100 animate-in slide-in-from-right-4">
+                                            <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-xl">
+                                                {p.nickname.split(' ')[0]}
+                                            </div>
+                                            <span className="font-bold text-slate-700 text-lg">{p.nickname.split(' ').slice(1).join(' ')}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-8 pt-6 border-t border-slate-200">
+                            <Button 
+                                onClick={handleStartGame} 
+                                disabled={players.length === 0} 
+                                size="lg" 
+                                className="w-full py-6 text-xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all"
+                                icon={Play}
+                            >
+                                Start Jakten
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -220,7 +292,7 @@ export const MathHuntGenerator: React.FC<MathHuntGeneratorProps> = ({ t, languag
                                 <div className="grid grid-cols-2 gap-2 text-center">
                                     <div className="bg-white/50 p-2 rounded-xl">
                                         <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Nivå</p>
-                                        <p className="text-lg font-black">{p.last_answer || startLevel}</p>
+                                        <p className="text-lg font-black">{p.last_answer || 1}</p>
                                     </div>
                                     <div className="bg-white/50 p-2 rounded-xl">
                                         <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Løst</p>
@@ -268,7 +340,7 @@ export const MathHuntGenerator: React.FC<MathHuntGeneratorProps> = ({ t, languag
                                 <div className="flex items-center gap-6 text-sm">
                                     <div className="text-center">
                                         <span className="block text-[10px] font-black uppercase tracking-widest text-slate-400">Slutt-nivå</span>
-                                        <span className="font-black text-indigo-600">{p.last_answer || startLevel}</span>
+                                        <span className="font-black text-indigo-600">{p.last_answer || 1}</span>
                                     </div>
                                     <div className="text-center">
                                         <span className="block text-[10px] font-black uppercase tracking-widest text-slate-400">Løst</span>

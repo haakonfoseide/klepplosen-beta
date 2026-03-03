@@ -6,7 +6,7 @@ import { storageService } from '../services/storageService';
 import { COMMON_SUBJECTS, GRADES } from '../constants';
 import { SavedPlan, GeneratedTask } from '../types';
 
-export const SubstitutePlanGenerator = ({ t, language, currentUser, isOwner = true, initialData, currentPlanId }: any) => {
+export const SubstitutePlanGenerator = ({ t, language, currentUser, isOwner = true, initialData, currentPlanId, isShared: initialIsShared = false }: any) => {
     const [subject, setSubject] = useState(initialData?.subject || COMMON_SUBJECTS[0]);
     const [grade, setGrade] = useState(initialData?.grade || GRADES[0]);
     const [duration, setDuration] = useState(initialData?.duration || '45 min');
@@ -17,6 +17,7 @@ export const SubstitutePlanGenerator = ({ t, language, currentUser, isOwner = tr
     const [loading, setLoading] = useState(false);
     const [statusMessage, setStatusMessage] = useState('');
     const [saveStatus, setSaveStatus] = useState<string | null>(null);
+    const [isShared, setIsShared] = useState(initialIsShared);
 
     const handleGenerate = async () => {
         setLoading(true);
@@ -75,7 +76,7 @@ export const SubstitutePlanGenerator = ({ t, language, currentUser, isOwner = tr
                 date: new Date().toLocaleDateString('no-NO'),
                 creator: currentUser.name,
                 creatorId: currentUser.id,
-                isShared: false,
+                isShared: isShared,
                 isImported: false,
                 likes: 0,
                 likedBy: []

@@ -137,11 +137,11 @@ export const ClassroomToolsView: React.FC<ClassroomToolsViewProps> = ({
           {activeTool === 'groups' && <GroupGenerator t={t} />}
           {activeTool === 'light' && <TrafficLight t={t} />}
           {activeTool === 'corners' && <FourCorners t={t} language={language} />}
-          {activeTool === 'substitute' && <SubstitutePlanGenerator t={t} language={language} currentUser={currentUser} isOwner={isOwner} initialData={initialData} currentPlanId={state.currentPlanId} />}
-          {activeTool === 'task_gen' && <AIGenerator type="general_tasks" placeholder={t.themePlaceholder} icon={ListOrdered} color="bg-indigo-100" t={t} language={language} currentUser={currentUser} isOwner={isOwner} initialData={initialData} currentPlanId={state.currentPlanId} />}
-          {activeTool === 'exit' && <AIGenerator type="exit_ticket" placeholder={t.themePlaceholder} icon={Ticket} color="bg-amber-100" t={t} language={language} currentUser={currentUser} isOwner={isOwner} initialData={initialData} currentPlanId={state.currentPlanId} />}
-          {activeTool === 'icebreaker' && <AIGenerator type="icebreaker" placeholder={t.themePlaceholder} icon={Zap} color="bg-cyan-100" t={t} language={language} currentUser={currentUser} isOwner={isOwner} initialData={initialData} currentPlanId={state.currentPlanId} />}
-          {activeTool === 'debate' && <AIGenerator type="debater" placeholder={t.themePlaceholder} icon={MessageSquare} color="bg-pink-100" t={t} language={language} currentUser={currentUser} isOwner={isOwner} initialData={initialData} currentPlanId={state.currentPlanId} />}
+          {activeTool === 'substitute' && <SubstitutePlanGenerator t={t} language={language} currentUser={currentUser} isOwner={isOwner} initialData={initialData} currentPlanId={state.currentPlanId} isShared={state.isShared} />}
+          {activeTool === 'task_gen' && <AIGenerator type="general_tasks" placeholder={t.themePlaceholder} icon={ListOrdered} color="bg-indigo-100" t={t} language={language} currentUser={currentUser} isOwner={isOwner} initialData={initialData} currentPlanId={state.currentPlanId} isShared={state.isShared} />}
+          {activeTool === 'exit' && <AIGenerator type="exit_ticket" placeholder={t.themePlaceholder} icon={Ticket} color="bg-amber-100" t={t} language={language} currentUser={currentUser} isOwner={isOwner} initialData={initialData} currentPlanId={state.currentPlanId} isShared={state.isShared} />}
+          {activeTool === 'icebreaker' && <AIGenerator type="icebreaker" placeholder={t.themePlaceholder} icon={Zap} color="bg-cyan-100" t={t} language={language} currentUser={currentUser} isOwner={isOwner} initialData={initialData} currentPlanId={state.currentPlanId} isShared={state.isShared} />}
+          {activeTool === 'debate' && <AIGenerator type="debater" placeholder={t.themePlaceholder} icon={MessageSquare} color="bg-pink-100" t={t} language={language} currentUser={currentUser} isOwner={isOwner} initialData={initialData} currentPlanId={state.currentPlanId} isShared={state.isShared} />}
           {['starters', 'alias', 'terms', 'roles', 'assessment', 'rhetoric'].includes(activeTool) && (
               <UnifiedOracyGenerator 
                 type={activeTool} 
@@ -151,6 +151,7 @@ export const ClassroomToolsView: React.FC<ClassroomToolsViewProps> = ({
                 initialData={initialData}
                 isOwner={isOwner}
                 currentPlanId={state.currentPlanId}
+                isShared={state.isShared}
               />
           )}
         </div>

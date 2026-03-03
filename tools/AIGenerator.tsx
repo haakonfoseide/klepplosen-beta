@@ -6,7 +6,7 @@ import { storageService } from '../services/storageService';
 import { COMMON_SUBJECTS, LANGUAGE_SUBJECTS, ELECTIVE_SUBJECTS, GRADES } from '../constants';
 import { SavedPlan, GeneratedTask } from '../types';
 
-export const AIGenerator = ({ type, placeholder, icon: Icon, color, t, language, currentUser, isOwner = true, initialData, currentPlanId }: any) => {
+export const AIGenerator = ({ type, placeholder, icon: Icon, color, t, language, currentUser, isOwner = true, initialData, currentPlanId, isShared: initialIsShared = false }: any) => {
     const [subjectCat, setSubjectCat] = useState('common');
     const [topic, setTopic] = useState(initialData?.topic || '');
     const [grade, setGrade] = useState(initialData?.grade || GRADES[0]);
@@ -18,6 +18,7 @@ export const AIGenerator = ({ type, placeholder, icon: Icon, color, t, language,
 
     // Save State
     const [saveStatus, setSaveStatus] = useState<string | null>(null);
+    const [isShared, setIsShared] = useState(initialIsShared);
 
     // Edit State
     const [isEditing, setIsEditing] = useState(false);
@@ -91,7 +92,7 @@ export const AIGenerator = ({ type, placeholder, icon: Icon, color, t, language,
                 date: new Date().toLocaleDateString('no-NO'),
                 creator: currentUser.name,
                 creatorId: currentUser.id,
-                isShared: false,
+                isShared: isShared,
                 isImported: false,
                 likes: 0,
                 likedBy: []

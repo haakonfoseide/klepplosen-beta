@@ -74,7 +74,7 @@ export const useAppLogic = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const planId = params.get('id');
-    if (planId && !planning.state.currentPlanId) {
+    if (planId && !state.currentPlanId) {
         const loadPlan = async () => {
             const plan = await storageService.getPlanById(planId);
             if (plan) {

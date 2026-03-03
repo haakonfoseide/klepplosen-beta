@@ -243,7 +243,7 @@ export const PROMPTS = {
     ${gameType !== 'crossword' ? '1. En liste med ord som skal finnes (for ordleter).' : ''}
     ${gameType !== 'wordsearch' ? '2. En liste med hint og svar (for kryssord).' : ''}
     ${gameType !== 'crossword' ? '3. En bokstav-grid (2D array) for ordleteren der ordene er gjemt (horisontalt, vertikalt, diagonalt).' : ''}
-    ${gameType !== 'wordsearch' ? '4. NØYAKTIGE koordinater (row, col) for kryssordet. Ordene MÅ krysse hverandre på riktig måte (dele felles bokstaver). `row` og `col` starter på 0. `direction` må være "across" (vannrett) eller "down" (loddrett).' : ''}
+    ${gameType !== 'wordsearch' ? '4. NØYAKTIGE koordinater (row, col) for kryssordet. Ordene MÅ krysse hverandre på riktig måte (dele felles bokstaver). Sørg for at alle ord i kryssordet henger sammen i ett enkelt rutenett (ingen isolerte ord). `row` og `col` starter på 0. `direction` må være "across" (vannrett) eller "down" (loddrett).' : ''}
     
     Språk: ${language} (Nynorsk).
     

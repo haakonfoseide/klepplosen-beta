@@ -6,6 +6,7 @@ import { COMMON_SUBJECTS } from '../constants';
 import { Printer, RefreshCw, Grid3X3, Type, ArrowRight, Check, Plus, Trash2, List, Save, Copy, Loader2, Maximize2, Minimize2 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import { SavedPlan, GeneratedTask } from '../types';
+import { useToast } from '../contexts/ToastContext';
 
 interface CrosswordGeneratorProps {
     language?: string;
@@ -14,6 +15,7 @@ interface CrosswordGeneratorProps {
     isOwner?: boolean;
     initialData?: any;
     currentPlanId?: string;
+    isShared?: boolean;
 }
 
 export const CrosswordGenerator: React.FC<CrosswordGeneratorProps> = ({ 
@@ -22,7 +24,8 @@ export const CrosswordGenerator: React.FC<CrosswordGeneratorProps> = ({
     currentUser,
     isOwner = true,
     initialData,
-    currentPlanId
+    currentPlanId,
+    isShared = false
 }) => {
     const [step, setStep] = useState<'config' | 'words' | 'loading' | 'result'>('config');
     const [subject, setSubject] = useState(initialData?.subject || COMMON_SUBJECTS[0]);
@@ -38,6 +41,7 @@ export const CrosswordGenerator: React.FC<CrosswordGeneratorProps> = ({
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [isFullscreen, setIsFullscreen] = useState(false);
     const isGenerating = step === 'loading';
+    const { addToast } = useToast();
 
     React.useEffect(() => {
         if (initialData) {
@@ -62,6 +66,7 @@ export const CrosswordGenerator: React.FC<CrosswordGeneratorProps> = ({
             setStep('words');
         } catch (err) {
             setStep('config');
+            addToast("Kunne ikke generere ordliste. Prøv igjen.", 'error');
         }
     };
 
@@ -96,7 +101,7 @@ export const CrosswordGenerator: React.FC<CrosswordGeneratorProps> = ({
                 date: new Date().toLocaleDateString('no-NO'),
                 creator: currentUser.name,
                 creatorId: currentUser.id,
-                isShared: false,
+                isShared: isShared,
                 isImported: false,
                 likes: 0,
                 likedBy: []
@@ -125,9 +130,11 @@ export const CrosswordGenerator: React.FC<CrosswordGeneratorProps> = ({
                 }
             } else {
                 setStep('words');
+                addToast("Kunne ikke generere spilldata. Prøv igjen.", 'error');
             }
         } catch (err) {
             setStep('words');
+            addToast("En feil oppstod under generering. Prøv igjen.", 'error');
         }
     };
 

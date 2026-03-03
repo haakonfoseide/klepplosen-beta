@@ -7,7 +7,7 @@ import { COMMON_SUBJECTS, LANGUAGE_SUBJECTS, ELECTIVE_SUBJECTS, GRADES } from '.
 import { BulletList } from '../CommonComponents';
 import { SavedPlan, GeneratedTask } from '../types';
 
-export const ProjectPlanner = ({ t, language, currentUser, isOwner = true, initialData, currentPlanId }: any) => {
+export const ProjectPlanner = ({ t, language, currentUser, isOwner = true, initialData, currentPlanId, isShared: initialIsShared = false }: any) => {
     const [subjectCat, setSubjectCat] = useState('common');
     const [subject, setSubject] = useState(initialData?.subject || COMMON_SUBJECTS[0]);
     const [grade, setGrade] = useState(initialData?.grade || GRADES[5]);
@@ -18,7 +18,7 @@ export const ProjectPlanner = ({ t, language, currentUser, isOwner = true, initi
     
     // Save State
     const [saveStatus, setSaveStatus] = useState<string | null>(null);
-    const [isShared, setIsShared] = useState(initialData?.isShared || false);
+    const [isShared, setIsShared] = useState(initialIsShared);
 
     // Edit State
     const [isEditing, setIsEditing] = useState(false);

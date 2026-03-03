@@ -187,6 +187,7 @@ export interface AppState {
     currentPlanId: string | null;
     currentPlanOwnerId: string | null;
     isViewingArchived: boolean;
+    isShared: boolean;
     activeToolId: string | null;
     options: {
         generateWorksheet: boolean;
@@ -297,7 +298,7 @@ export interface QuizSession {
     questions: QuizQuestion[];
     players: QuizPlayer[];
     config?: {
-        playMode?: 'classic' | 'teams' | 'math_hunt';
+        playMode?: 'classic' | 'teams';
         seaNames?: boolean;
         autoTeams?: boolean;
     };

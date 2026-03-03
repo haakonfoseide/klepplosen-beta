@@ -7,7 +7,7 @@ import { COMMON_SUBJECTS, GRADES } from '../constants';
 import { SavedPlan, GeneratedTask } from '../types';
 import { AliasGame } from './AliasGame';
 
-export const UnifiedOracyGenerator = ({ type, t, language, currentUser, initialData, isOwner = true, currentPlanId }: { type: any, t: any, language: string, currentUser?: any, initialData?: any, isOwner?: boolean, currentPlanId?: string }) => {
+export const UnifiedOracyGenerator = ({ type, t, language, currentUser, initialData, isOwner = true, currentPlanId, isShared: initialIsShared = false }: { type: any, t: any, language: string, currentUser?: any, initialData?: any, isOwner?: boolean, currentPlanId?: string, isShared?: boolean }) => {
     const [config, setConfig] = useState({ 
         subject: initialData?.subject || COMMON_SUBJECTS[0], 
         grade: initialData?.grade || GRADES[5], 
@@ -25,6 +25,7 @@ export const UnifiedOracyGenerator = ({ type, t, language, currentUser, initialD
     const [editedResult, setEditedResult] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+    const [isShared, setIsShared] = useState(initialIsShared);
 
     // Game State
     const [isPlaying, setIsPlaying] = useState(false);
@@ -126,7 +127,7 @@ export const UnifiedOracyGenerator = ({ type, t, language, currentUser, initialD
                 date: new Date().toLocaleDateString('no-NO'),
                 creator: currentUser.name,
                 creatorId: currentUser.id,
-                isShared: false,
+                isShared: isShared,
                 isImported: false,
                 likes: 0,
                 likedBy: []

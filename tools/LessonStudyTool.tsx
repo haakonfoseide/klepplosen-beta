@@ -418,7 +418,7 @@ export const LessonStudyTool: React.FC<LessonStudyToolProps> = ({ t, onBack, cur
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files) return;
-        Array.from(files).forEach((file: File) => {
+        Array.from(files).forEach(file => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 const base64 = (reader.result as string).split(',')[1];

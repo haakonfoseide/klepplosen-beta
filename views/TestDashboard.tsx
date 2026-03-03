@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { CheckCircle2, XCircle, Play, ChevronLeft, AlertTriangle } from 'lucide-react';
 import { getLines, formatDate } from '../helpers';
 import { parseResponse } from '../services/aiUtils';

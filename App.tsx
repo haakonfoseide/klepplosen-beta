@@ -67,6 +67,8 @@ const AppContent: React.FC = () => {
         onAccessGranted={grantAccess} 
         onLogin={signIn}
         t={t}
+        languageForm={state.languageForm}
+        setLanguageForm={(lang) => setState({...state, languageForm: lang})}
         onGuestLogin={enterGuestMode}
       />
     );

@@ -32,7 +32,7 @@ export async function recommendStructures(subject: string, topic: string, aims: 
     }
 }
 
-export async function remixTask(originalTask: GeneratedTask, mode: 'simplify' | 'active' | 'critical' | 'creative' | 'differentiation', language: string): Promise<GeneratedTask> {
+export async function remixTask(originalTask: GeneratedTask, mode: 'simplify' | 'active' | 'critical' | 'creative', language: string): Promise<GeneratedTask> {
     const prompt = PROMPTS.REMIX_TASK(originalTask, mode, language);
 
     const res = await generateContentWithRetry('gemini-3.1-pro-preview', prompt, {

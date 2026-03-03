@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { supabase } from '../../services/storageService';
 import { generateMathHint, generateMathReport, generateMathProblem } from '../../services/geminiService';
-import { Check, X, HelpCircle, Trophy, Loader2, Sparkles } from 'lucide-react';
+import { Check, X, HelpCircle, Trophy, Loader2, Sparkles, Target } from 'lucide-react';
 
 interface StudentMathHuntProps {
     session: any;
@@ -23,16 +23,28 @@ export const StudentMathHunt: React.FC<StudentMathHuntProps> = ({
     const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
     const [hint, setHint] = useState<string | null>(null);
     const [isLoadingHint, setIsLoadingHint] = useState(false);
-    const [level, setLevel] = useState(session.config?.startLevel || 1);
+    
+    // Level selection state
+    const [hasSelectedLevel, setHasSelectedLevel] = useState(false);
+    const [level, setLevel] = useState(1);
+    
     const [report, setReport] = useState<string | null>(null);
     const [isGeneratingReport, setIsGeneratingReport] = useState(false);
     const [isLoadingProblem, setIsLoadingProblem] = useState(false);
 
     const generateProblem = useCallback(async (currentLevel: number) => {
         const topic = session.config?.topic || 'addition';
+        const grade = session.config?.grade || '5. trinn';
         let num1, num2, ans, q;
         
-        const max = currentLevel * 10;
+        // Difficulty scaling based on grade
+        let gradeMultiplier = 1;
+        if (grade.startsWith('1.') || grade.startsWith('2.')) gradeMultiplier = 0.5;
+        else if (grade.startsWith('3.') || grade.startsWith('4.')) gradeMultiplier = 1;
+        else if (grade.startsWith('5.') || grade.startsWith('6.') || grade.startsWith('7.')) gradeMultiplier = 5;
+        else gradeMultiplier = 10;
+
+        const max = Math.ceil(currentLevel * 10 * gradeMultiplier);
         
         // Standard topics
         if (['addition', 'subtraction', 'multiplication', 'division', 'mixed'].includes(topic)) {
@@ -56,14 +68,17 @@ export const StudentMathHunt: React.FC<StudentMathHuntProps> = ({
                     q = `${num1} - ${num2}`;
                     break;
                 case 'multiplication':
-                    num1 = Math.floor(Math.random() * (currentLevel + 2)) + 1;
-                    num2 = Math.floor(Math.random() * 10) + 1;
+                    // Adjust multiplication for lower grades
+                    const mMax1 = gradeMultiplier < 1 ? 5 : (currentLevel + 2) * Math.sqrt(gradeMultiplier);
+                    const mMax2 = gradeMultiplier < 1 ? 5 : 10 * Math.sqrt(gradeMultiplier);
+                    num1 = Math.floor(Math.random() * mMax1) + 1;
+                    num2 = Math.floor(Math.random() * mMax2) + 1;
                     ans = num1 * num2;
                     q = `${num1} × ${num2}`;
                     break;
                 case 'division':
                     num2 = Math.floor(Math.random() * 10) + 1;
-                    ans = Math.floor(Math.random() * (currentLevel + 2)) + 1;
+                    ans = Math.floor(Math.random() * (currentLevel + 2) * Math.sqrt(gradeMultiplier)) + 1;
                     num1 = num2 * ans;
                     q = `${num1} ÷ ${num2}`;
                     break;
@@ -82,26 +97,37 @@ export const StudentMathHunt: React.FC<StudentMathHuntProps> = ({
             // Custom AI topic
             setIsLoadingProblem(true);
             try {
-                const aiProblem = await generateMathProblem(topic, currentLevel);
+                const aiProblem = await generateMathProblem(topic, currentLevel, grade);
                 if (aiProblem) {
                     setProblem(aiProblem);
                     setAnswer('');
                     setFeedback('idle');
                     setHint(null);
+                } else {
+                    throw new Error("AI returned null");
                 }
             } catch (e) {
-                console.error(e);
+                console.error("AI Generation failed, falling back to addition", e);
+                // Fallback to simple addition if AI fails
+                num1 = Math.floor(Math.random() * max) + 1;
+                num2 = Math.floor(Math.random() * max) + 1;
+                ans = num1 + num2;
+                q = `${num1} + ${num2}`;
+                setProblem({ q, a: ans });
+                setAnswer('');
+                setFeedback('idle');
+                setHint(null);
             } finally {
                 setIsLoadingProblem(false);
             }
         }
-    }, [session.config?.topic]);
+    }, [session.config?.topic, session.config?.grade]);
 
     useEffect(() => {
-        if (!problem && session.status === 'active') {
+        if (hasSelectedLevel && !problem && session.status === 'active') {
             generateProblem(level);
         }
-    }, [problem, session.status, level, generateProblem]);
+    }, [problem, session.status, level, generateProblem, hasSelectedLevel]);
 
     useEffect(() => {
         if (session.status === 'finished' && !report && !isGeneratingReport) {
@@ -180,6 +206,13 @@ export const StudentMathHunt: React.FC<StudentMathHuntProps> = ({
         }
     };
 
+    const handleSelectLevel = (lvl: number) => {
+        setLevel(lvl);
+        setHasSelectedLevel(true);
+        // Update initial level in DB so teacher sees it
+        supabase.from('quiz_players').update({ last_answer: lvl.toString() }).eq('id', playerId).then(() => onSync());
+    };
+
     if (session.status === 'finished') {
         return (
             <div className="min-h-screen bg-slate-50 p-4 flex flex-col items-center justify-center">
@@ -213,6 +246,32 @@ export const StudentMathHunt: React.FC<StudentMathHuntProps> = ({
                         ) : (
                             <p className="text-indigo-800 text-sm leading-relaxed">{report}</p>
                         )}
+                    </div>
+                </Card>
+            </div>
+        );
+    }
+
+    if (!hasSelectedLevel) {
+        return (
+            <div className="min-h-screen bg-slate-50 p-4 flex flex-col items-center justify-center">
+                <Card className="w-full max-w-md p-8 text-center space-y-6">
+                    <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <Target size={32} />
+                    </div>
+                    <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Velg startnivå</h2>
+                    <p className="text-slate-500">Hvor vanskelig vil du ha det?</p>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(lvl => (
+                            <button
+                                key={lvl}
+                                onClick={() => handleSelectLevel(lvl)}
+                                className="p-4 rounded-xl border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50 font-black text-lg transition-all"
+                            >
+                                Nivå {lvl}
+                            </button>
+                        ))}
                     </div>
                 </Card>
             </div>

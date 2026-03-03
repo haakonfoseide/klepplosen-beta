@@ -26,6 +26,7 @@ const INITIAL_STATE: AppState = {
   currentPlanId: null,
   currentPlanOwnerId: null,
   isViewingArchived: false,
+  isShared: false,
   activeToolId: null,
   options: {
     generateWorksheet: false,
@@ -207,13 +208,14 @@ export const usePlanning = (dbStructures: CLStructure[]) => {
   const loadArchivedPlan = (plan: SavedPlan) => {
       setState(s => ({
           ...s,
-          generatedTask: plan.task || null,
+          generatedTask: plan.task || {},
           subject: plan.subject,
           grade: plan.grade,
           topic: plan.topic,
           currentPlanId: plan.id,
           currentPlanOwnerId: plan.creatorId,
           isViewingArchived: true,
+          isShared: plan.isShared || false,
           activeToolId: (plan.task?.planType === 'tool' || plan.task?.planType === 'quiz') ? (plan.task?.toolType || null) : (plan.task?.planType === 'project' ? 'project_planner' : null)
       }));
       

@@ -16,9 +16,10 @@ interface QuizGameProps {
     isOwner?: boolean;
     initialData?: any;
     currentPlanId?: string;
+    isShared?: boolean;
 }
 
-export const QuizGame: React.FC<QuizGameProps> = ({ t, language, currentUser, isOwner = true, initialData, currentPlanId }) => {
+export const QuizGame: React.FC<QuizGameProps> = ({ t, language, currentUser, isOwner = true, initialData, currentPlanId, isShared = false }) => {
     const { addToast } = useToast();
     
     // Phases: setup (AI gen), lobby (PIN/Players), game (Active question), result (Leaderboard)
@@ -160,7 +161,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({ t, language, currentUser, is
                 date: new Date().toLocaleDateString('no-NO'),
                 creator: currentUser.name,
                 creatorId: currentUser.id,
-                isShared: false,
+                isShared: isShared,
                 isImported: false,
                 likes: 0,
                 likedBy: []

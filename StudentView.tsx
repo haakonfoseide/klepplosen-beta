@@ -62,16 +62,29 @@ export const StudentView: React.FC<StudentViewProps> = ({ initialPin }) => {
     };
 
     const fetchMyScore = useCallback(async (pId: string) => {
-        const { data: allPlayers } = await supabase.from('quiz_players').select('id, score, streak').eq('session_id', session?.id || localStorage.getItem(STORAGE_KEY_SESSION_ID));
-        if (allPlayers) {
-            const sorted = [...allPlayers].sort((a,b) => b.score - a.score);
-            const myIndex = sorted.findIndex(p => p.id === pId);
-            const myData = sorted[myIndex];
-            if (myData) {
-                setPlayerScore(myData.score);
-                setPlayerStreak(myData.streak);
-                setPlayerRank(myIndex + 1);
+        const sId = session?.id || localStorage.getItem(STORAGE_KEY_SESSION_ID);
+        if (!sId) return;
+        
+        try {
+            const { data: allPlayers, error } = await supabase.from('quiz_players').select('id, score, streak').eq('session_id', sId);
+            
+            if (error) {
+                console.warn("Error fetching score:", error);
+                return;
             }
+
+            if (allPlayers) {
+                const sorted = [...allPlayers].sort((a,b) => b.score - a.score);
+                const myIndex = sorted.findIndex(p => p.id === pId);
+                if (myIndex !== -1) {
+                    const myData = sorted[myIndex];
+                    setPlayerScore(myData.score);
+                    setPlayerStreak(myData.streak);
+                    setPlayerRank(myIndex + 1);
+                }
+            }
+        } catch (e) {
+            console.warn("Failed to fetch score", e);
         }
     }, [session?.id]);
 

@@ -130,7 +130,7 @@ export async function generateCrosswordWordList(subject: string, topic: string, 
     const prompt = PROMPTS.CROSSWORD_WORDLIST(subject, topic, difficulty, language);
 
     try {
-        const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, {
+        const res = await generateContentWithRetry('gemini-3.1-pro-preview', prompt, {
             responseMimeType: 'application/json',
             responseSchema: {
                 type: Type.OBJECT,
@@ -171,7 +171,7 @@ export async function generateCrosswordData(
     const prompt = PROMPTS.CROSSWORD_DATA(subject, topic, difficulty, gridSize, language, gameType, customWordsContext);
 
     try {
-        const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, {
+        const res = await generateContentWithRetry('gemini-3.1-pro-preview', prompt, {
             responseMimeType: 'application/json',
             responseSchema: {
                 type: Type.OBJECT,
@@ -249,10 +249,12 @@ Fokuser på innsats og mestring. Bruk et barnevennlig språk.`;
     }
 };
 
-export async function generateMathProblem(topic: string, level: number): Promise<{q: string, a: number} | null> {
+export async function generateMathProblem(topic: string, level: number, grade?: string): Promise<{q: string, a: number} | null> {
+    const gradeContext = grade ? `Tilpasset kompetansemål for ${grade}. trinn.` : '';
     const prompt = `Lag en matteoppgave for en elev på barneskolen.
 Tema: ${topic}
 Vanskelighetsgrad (1-10): ${level}
+${gradeContext}
 
 Svaret MÅ være et heltall.
 Returner KUN et JSON-objekt på formatet: {"q": "oppgavetekst", "a": tall}
@@ -265,7 +267,7 @@ Eksempel: {"q": "5 + 5", "a": 10}`;
                 type: Type.OBJECT,
                 properties: {
                     q: { type: Type.STRING },
-                    a: { type: Type.INTEGER }
+                    a: { type: Type.NUMBER }
                 }
             }
         });

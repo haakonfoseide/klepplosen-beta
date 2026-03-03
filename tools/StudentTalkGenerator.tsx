@@ -6,14 +6,14 @@ import { generateStudentTalk } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 import { SavedPlan, GeneratedTask } from '../types';
 
-export const StudentTalkGenerator = ({ t, language, currentUser, isOwner = true, initialData, currentPlanId }: any) => {
+export const StudentTalkGenerator = ({ t, language, currentUser, isOwner = true, initialData, currentPlanId, isShared: initialIsShared = false }: any) => {
     const [grade, setGrade] = useState(initialData?.grade || GRADES[0]);
     const [topic, setTopic] = useState(initialData?.topic || '');
     const [uploadedImage, setUploadedImage] = useState<{data: string, mimeType: string} | null>(null);
     const [result, setResult] = useState<any>(initialData || null);
     const [loading, setLoading] = useState(false);
     const [saveStatus, setSaveStatus] = useState<string | null>(null);
-    const [isShared, setIsShared] = useState(initialData?.isShared || false);
+    const [isShared, setIsShared] = useState(initialIsShared);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleGenerate = async () => {
