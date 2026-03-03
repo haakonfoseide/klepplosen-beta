@@ -297,7 +297,7 @@ export interface QuizSession {
     questions: QuizQuestion[];
     players: QuizPlayer[];
     config?: {
-        playMode?: 'classic' | 'teams';
+        playMode?: 'classic' | 'teams' | 'math_hunt';
         seaNames?: boolean;
         autoTeams?: boolean;
     };

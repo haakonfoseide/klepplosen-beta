@@ -207,7 +207,7 @@ export const usePlanning = (dbStructures: CLStructure[]) => {
   const loadArchivedPlan = (plan: SavedPlan) => {
       setState(s => ({
           ...s,
-          generatedTask: plan.task || {},
+          generatedTask: plan.task || null,
           subject: plan.subject,
           grade: plan.grade,
           topic: plan.topic,

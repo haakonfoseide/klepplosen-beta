@@ -245,8 +245,8 @@ export const storageService = {
   },
   checkConnection: async () => {
       const { error } = await supabase.from('users').select('count', { count: 'exact', head: true });
-      if (error) return { status: 'error', latency: 0, message: error.message };
-      return { status: 'ok', latency: 100 };
+      if (error) return { status: 'error' as const, latency: 0, message: error.message };
+      return { status: 'ok' as const, latency: 100 };
   },
   getSystemSetting: async (key: string) => {
       const { data } = await supabase.from('system_settings').select('value').eq('key', key).single();

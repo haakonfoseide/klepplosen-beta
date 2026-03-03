@@ -61,6 +61,20 @@ export const StudentView: React.FC<StudentViewProps> = ({ initialPin }) => {
         setIntroSeen(false);
     };
 
+    const fetchMyScore = useCallback(async (pId: string) => {
+        const { data: allPlayers } = await supabase.from('quiz_players').select('id, score, streak').eq('session_id', session?.id || localStorage.getItem(STORAGE_KEY_SESSION_ID));
+        if (allPlayers) {
+            const sorted = [...allPlayers].sort((a,b) => b.score - a.score);
+            const myIndex = sorted.findIndex(p => p.id === pId);
+            const myData = sorted[myIndex];
+            if (myData) {
+                setPlayerScore(myData.score);
+                setPlayerStreak(myData.streak);
+                setPlayerRank(myIndex + 1);
+            }
+        }
+    }, [session?.id]);
+
     const syncUIToSessionStatus = useCallback((sessStatus: string, qIndex: number) => {
         if (sessStatus === 'active') {
             setStatus('game');
@@ -308,20 +322,6 @@ export const StudentView: React.FC<StudentViewProps> = ({ initialPin }) => {
             setIsLoading(false);
         }
     };
-
-    const fetchMyScore = useCallback(async (pId: string) => {
-        const { data: allPlayers } = await supabase.from('quiz_players').select('id, score, streak').eq('session_id', session?.id || localStorage.getItem(STORAGE_KEY_SESSION_ID));
-        if (allPlayers) {
-            const sorted = [...allPlayers].sort((a,b) => b.score - a.score);
-            const myIndex = sorted.findIndex(p => p.id === pId);
-            const myData = sorted[myIndex];
-            if (myData) {
-                setPlayerScore(myData.score);
-                setPlayerStreak(myData.streak);
-                setPlayerRank(myIndex + 1);
-            }
-        }
-    }, [session?.id]);
 
     const submitAnswer = async (answerIndex: number) => {
         if (hasAnswered || !session || !playerId) return;
