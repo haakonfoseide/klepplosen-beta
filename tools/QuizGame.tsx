@@ -52,6 +52,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({ t, language, currentUser, is
 
     const timerRef = useRef<any>(null);
     const subscriptionRef = useRef<any>(null);
+    const currentQIndexRef = useRef(0);
 
     // Load initial data if opened from archive
     useEffect(() => {
@@ -240,21 +241,23 @@ export const QuizGame: React.FC<QuizGameProps> = ({ t, language, currentUser, is
     }, [session]);
 
     const handleTimeUp = useCallback(async () => {
+        if (timerRef.current) clearInterval(timerRef.current);
         // Move to REVEAL phase (show correct answer + explanation)
         setGameStatus('reveal');
-        await updateSessionStatus('reveal', currentQuestionIndex);
-    }, [currentQuestionIndex, updateSessionStatus]);
+        await updateSessionStatus('reveal', currentQIndexRef.current);
+    }, [updateSessionStatus]);
 
     const finishGame = useCallback(async () => {
         setPhase('result');
-        await updateSessionStatus('finished', currentQuestionIndex);
+        await updateSessionStatus('finished', currentQIndexRef.current);
         if (session) fetchPlayers(session.id); // Final scores
-    }, [currentQuestionIndex, session, updateSessionStatus, fetchPlayers]);
+    }, [session, updateSessionStatus, fetchPlayers]);
 
     const startQuestion = useCallback(async (index: number) => {
         if (!session) return;
         
         // 1. Reset state
+        currentQIndexRef.current = index;
         setCurrentQuestionIndex(index);
         setGameStatus('question');
         setAnswersCount(0);
@@ -498,7 +501,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({ t, language, currentUser, is
                                         <input 
                                             type="number"
                                             value={tempQuestion.timeLimit} 
-                                            onChange={e => setTempQuestion({...tempQuestion, timeLimit: parseInt(e.target.value)})}
+                                            onChange={e => setTempQuestion({...tempQuestion, timeLimit: parseInt(e.target.value, 10)})}
                                             className="w-full p-4 bg-slate-50 rounded-2xl font-bold text-sm border-0 focus:ring-2 ring-purple-100 outline-none"
                                         />
                                     </div>
@@ -811,7 +814,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({ t, language, currentUser, is
                                     </div>
                                 ))
                             ) : (
-                                players.sort((a,b) => b.score - a.score).slice(0, 5).map((p, i) => (
+                                [...players].sort((a,b) => b.score - a.score).slice(0, 5).map((p, i) => (
                                     <div key={p.id} className="flex justify-between items-center bg-white/10 p-4 rounded-2xl border border-white/5 animate-in slide-in-from-bottom-2" style={{animationDelay: `${i*100}ms`}}>
                                         <div className="flex items-center gap-4">
                                             <span className={`font-black text-xl ${i===0 ? 'text-yellow-400' : 'text-slate-400'}`}>#{i+1}</span>

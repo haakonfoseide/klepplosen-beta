@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { supabase } from '../services/storageService';
@@ -21,6 +21,11 @@ export const MathHuntGenerator: React.FC<MathHuntGeneratorProps> = ({ t, languag
     const [session, setSession] = useState<any>(null);
     const [players, setPlayers] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const cleanupSubscriptionRef = useRef<(() => void) | null>(null);
+
+    useEffect(() => {
+        return () => { cleanupSubscriptionRef.current?.(); };
+    }, []);
 
     const GRADES = ['1. trinn', '2. trinn', '3. trinn', '4. trinn', '5. trinn', '6. trinn', '7. trinn', '8. trinn', '9. trinn', '10. trinn'];
 
@@ -73,7 +78,8 @@ export const MathHuntGenerator: React.FC<MathHuntGeneratorProps> = ({ t, languag
             if (data) {
                 setSession(data);
                 setStep('lobby');
-                subscribeToPlayers(data.id);
+                cleanupSubscriptionRef.current?.();
+                cleanupSubscriptionRef.current = subscribeToPlayers(data.id);
             }
         } catch (e) {
             console.error(e);
@@ -92,7 +98,10 @@ export const MathHuntGenerator: React.FC<MathHuntGeneratorProps> = ({ t, languag
     const handleEndGame = async () => {
         if (!session) return;
         await supabase.from('quiz_sessions').update({ status: 'finished' }).eq('id', session.id);
+        await fetchPlayers(session.id);
         setSession({ ...session, status: 'finished' });
+        cleanupSubscriptionRef.current?.();
+        cleanupSubscriptionRef.current = null;
         setStep('summary');
     };
 
@@ -266,7 +275,7 @@ export const MathHuntGenerator: React.FC<MathHuntGeneratorProps> = ({ t, languag
                         </div>
                         <div>
                             <h2 className="text-xl font-black uppercase tracking-tight text-slate-900">MatteJakt pågår</h2>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tema: {topic} • PIN: {session?.pin_code}</p>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tema: {session?.config?.topic || topic} • PIN: {session?.pin_code}</p>
                         </div>
                     </div>
                     <div className="flex gap-4">

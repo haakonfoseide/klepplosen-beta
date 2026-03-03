@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Wrench, X, Timer, Siren, Users } from 'lucide-react';
 import { TimerComponent } from '../../CommonComponents';
 import { NoiseMeter } from '../../tools/NoiseMeter';
+import { GroupGenerator } from '../../tools/GroupGenerator';
 
 interface QuickToolsProps {
   t: any;
+  language?: string;
 }
 
-export const QuickTools: React.FC<QuickToolsProps> = ({ t }) => {
+export const QuickTools: React.FC<QuickToolsProps> = ({ t, language = 'nb' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTool, setActiveTool] = useState<string | null>(null);
 
@@ -59,13 +61,8 @@ export const QuickTools: React.FC<QuickToolsProps> = ({ t }) => {
             
             <div className="p-6 sm:p-8">
               {activeTool === 'timer' && <TimerComponent t={t} />}
-              {activeTool === 'noise' && <NoiseMeter t={t} />}
-              {activeTool === 'groups' && (
-                <div className="text-center py-10">
-                  <Users size={48} className="mx-auto text-emerald-200 mb-4" />
-                  <p className="font-black uppercase text-slate-400">Gruppe-generator kommer her</p>
-                </div>
-              )}
+              {activeTool === 'noise' && <NoiseMeter t={t} language={language} />}
+              {activeTool === 'groups' && <GroupGenerator t={t} />}
             </div>
           </div>
         </div>

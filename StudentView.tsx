@@ -41,6 +41,7 @@ export const StudentView: React.FC<StudentViewProps> = ({ initialPin }) => {
 
     const subscriptionRef = useRef<any>(null);
     const pollIntervalRef = useRef<any>(null);
+    const playerIdRef = useRef<string | null>(null);
 
     const generateSeaName = () => {
         const adj = AVATARS[Math.floor(Math.random() * AVATARS.length)];
@@ -96,13 +97,14 @@ export const StudentView: React.FC<StudentViewProps> = ({ initialPin }) => {
             setQuestionStartTime(Date.now());
         } else if (sessStatus === 'reveal' || sessStatus === 'scoreboard' || sessStatus === 'finished' || sessStatus === 'reflection') {
             setStatus('result');
-            if (playerId) fetchMyScore(playerId);
+            const pId = playerIdRef.current;
+            if (pId) fetchMyScore(pId);
         } else if (sessStatus === 'lobby') {
-            if (playerId) {
+            if (playerIdRef.current) {
                 setStatus('lobby');
             }
         }
-    }, [playerId, fetchMyScore]);
+    }, [fetchMyScore]);
 
     useEffect(() => {
         if (session?.status === 'active' && !introSeen && status === 'game') {
@@ -234,6 +236,7 @@ export const StudentView: React.FC<StudentViewProps> = ({ initialPin }) => {
             config: sessData.config
         };
         setSession(restoredSess);
+        playerIdRef.current = pData.id;
         setPlayerId(pData.id);
         setPlayerScore(pData.score);
         setPlayerStreak(pData.streak);
@@ -320,6 +323,7 @@ export const StudentView: React.FC<StudentViewProps> = ({ initialPin }) => {
             if (insertError) throw insertError;
 
             if (data) {
+                playerIdRef.current = data.id;
                 setPlayerId(data.id);
                 setSelectedTeam(finalTeam);
                 localStorage.setItem(STORAGE_KEY_PLAYER_ID, data.id);
