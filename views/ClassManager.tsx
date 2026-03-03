@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, X, Eye, Loader2 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import { Class, Student } from '../types';
