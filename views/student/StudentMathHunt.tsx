@@ -123,23 +123,24 @@ export const StudentMathHunt: React.FC<StudentMathHuntProps> = ({
     };
 
     const handleSubmit = async () => {
-        if (!problem || !answer) return;
-        
-        const numAnswer = parseInt(answer);
+        if (!problem || !answer || feedback !== 'idle') return;
+
+        const numAnswer = parseInt(answer, 10);
+        if (isNaN(numAnswer)) return;
         const isCorrect = numAnswer === problem.a;
-        
+
         setFeedback(isCorrect ? 'correct' : 'wrong');
-        
+
         let newScore = playerScore;
         let newStreak = playerStreak;
         let newLevel = level;
         let newTeam = 'green'; // status color
-        
+
         if (isCorrect) {
             newScore += 1;
             newStreak += 1;
             if (newStreak >= 3) {
-                newLevel += 1;
+                newLevel = Math.min(newLevel + 1, 20);
                 newStreak = 0;
             }
             newTeam = 'green';
