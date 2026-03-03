@@ -1,0 +1,8 @@
+{
+  "name": "Beta V 4.0 KleppLosen Kai",
+  "description": "Et verktøy for lærere som kobler Cooperative Learning (CL) strukturer med UDIRs kompetansemål for å skape engasjerende undervisningsopplegg.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
