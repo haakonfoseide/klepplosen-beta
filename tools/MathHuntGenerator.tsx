@@ -138,7 +138,7 @@ export const MathHuntGenerator: React.FC<MathHuntGeneratorProps> = ({ t, languag
                                 type="number" 
                                 min="1" max="10"
                                 value={startLevel} 
-                                onChange={(e) => setStartLevel(parseInt(e.target.value) || 1)}
+                                onChange={(e) => setStartLevel(parseInt(e.target.value, 10) || 1)}
                                 className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all"
                             />
                         </div>

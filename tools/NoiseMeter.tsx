@@ -20,6 +20,7 @@ export const NoiseMeter = ({ t = {}, language = 'nynorsk' }: any) => {
     const audioContextRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const animationFrameRef = useRef<number | null>(null);
+    const streamRef = useRef<MediaStream | null>(null);
     
     const dataRef = useRef({ 
         peak: 0, 
@@ -35,6 +36,7 @@ export const NoiseMeter = ({ t = {}, language = 'nynorsk' }: any) => {
     const startMicrophone = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            streamRef.current = stream;
             audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
             analyserRef.current = audioContextRef.current.createAnalyser();
             const source = audioContextRef.current.createMediaStreamSource(stream);
@@ -51,11 +53,25 @@ export const NoiseMeter = ({ t = {}, language = 'nynorsk' }: any) => {
         } catch { alert("Mikrofontilgang mangler."); }
     };
     
-    const stopMicrophone = () => { 
-        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current); 
-        setIsListening(false); 
-        setVolume(0); 
+    const stopMicrophone = () => {
+        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+        streamRef.current?.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+        audioContextRef.current?.close();
+        audioContextRef.current = null;
+        analyserRef.current = null;
+        setIsListening(false);
+        setVolume(0);
     };
+
+    // Release microphone on unmount
+    useEffect(() => {
+        return () => {
+            if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+            streamRef.current?.getTracks().forEach(t => t.stop());
+            audioContextRef.current?.close();
+        };
+    }, []);
     
     const updateVolume = () => {
         if (!analyserRef.current) return;

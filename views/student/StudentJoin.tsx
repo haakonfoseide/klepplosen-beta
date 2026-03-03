@@ -140,7 +140,7 @@ export const StudentJoin: React.FC<StudentJoinProps> = ({
                   </button>
               ))}
           </div>
-          <button onClick={onRegister} disabled={isLoading} className="w-full max-md mt-8 bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-black active:scale-95 shadow-xl disabled:opacity-50">{isLoading ? <Loader2 className="animate-spin mx-auto"/> : 'KLAR!'}</button>
+          <button onClick={onRegister} disabled={isLoading} className="w-full max-w-md mt-8 bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-black active:scale-95 shadow-xl disabled:opacity-50">{isLoading ? <Loader2 className="animate-spin mx-auto"/> : 'KLAR!'}</button>
           {error && <div className="mt-4 text-red-300 font-bold">{error}</div>}
       </div>
     );
