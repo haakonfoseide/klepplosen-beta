@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { CloudRain, CheckCircle2, Activity, HeartHandshake, Loader2, Sparkles, ArrowRight, ShieldCheck, ClipboardList, PenLine } from 'lucide-react';
-import { GoogleGenAI, Type } from "@google/genai";
+import { Type } from "@google/genai";
+import { generateContentWithRetry, parseResponse, AI_MODELS } from '../services/aiUtils';
 
 interface AnalysisResult {
     functionHypothesis: string;
@@ -22,44 +23,40 @@ export const BehaviorGuide = ({ t, language }: any) => {
         setIsAnalyzing(true);
         
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
             const prompt = `Du er en spesialpedagogisk ekspert som bruker R.A.I.N-modellen (Recognize, Assess, Intervene, Notify).
-            
+
             Observasjon (Recognize): "${observation}"
             Kontekst/Vurdering (Assess): "${context}"
-            
+
             Basert på dette, generer følgende strukturert i JSON:
             1. En hypotese om atferdens funksjon (f.eks. oppmerksomhet, unngåelse, sansing, materielt).
             2. Mulige utløsende faktorer (triggers) basert på kontekst.
             3. 3-5 konkrete, pedagogiske lavterskel-tiltak (Intervene) for læreren i klasserommet.
             4. Et utkast til en objektiv, profesjonell loggføring (Notify) klar for systemet.
-            
+
             Språk: ${language}.`;
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: Type.OBJECT,
-                        properties: {
-                            functionHypothesis: { type: Type.STRING },
-                            triggers: { type: Type.ARRAY, items: { type: Type.STRING } },
-                            strategies: { type: Type.ARRAY, items: { type: Type.STRING } },
-                            logDraft: { type: Type.STRING }
-                        },
-                        required: ["functionHypothesis", "triggers", "strategies", "logDraft"]
-                    }
+            const response = await generateContentWithRetry(AI_MODELS.FLASH, prompt, {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        functionHypothesis: { type: Type.STRING },
+                        triggers: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        strategies: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        logDraft: { type: Type.STRING }
+                    },
+                    required: ["functionHypothesis", "triggers", "strategies", "logDraft"]
                 }
             });
 
-            if (response.text) {
-                setResult(JSON.parse(response.text));
+            const parsed = parseResponse(response.text);
+            if (parsed) {
+                setResult(parsed);
                 setStep(3);
             }
         } catch (e) {
-            alert("Kunne ikke analysere. Prøv igjen.");
+            console.error("BehaviorGuide analyze error:", e);
         } finally {
             setIsAnalyzing(false);
         }

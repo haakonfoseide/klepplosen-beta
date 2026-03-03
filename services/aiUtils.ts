@@ -1,6 +1,13 @@
 
 import { GoogleGenAI } from "@google/genai";
 
+// Model name constants — change here to update across all services
+export const AI_MODELS = {
+  FLASH: 'gemini-3-flash-preview',
+  PRO: 'gemini-3.1-pro-preview',
+} as const;
+export type AIModel = typeof AI_MODELS[keyof typeof AI_MODELS];
+
 // Singleton instance to prevent multiple initializations
 let aiClientInstance: GoogleGenAI | null = null;
 
@@ -80,7 +87,7 @@ export async function checkAIHealth(): Promise<{ status: 'ok' | 'error', latency
   const start = Date.now();
   try { 
     const ai = getAIClient();
-    await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: 'Ping' }); 
+    await ai.models.generateContent({ model: AI_MODELS.FLASH, contents: 'Ping' });
     return { status: 'ok', latency: Date.now() - start }; 
   } 
   catch (e: any) { return { status: 'error', latency: 0, message: e.message }; }

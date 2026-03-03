@@ -180,8 +180,6 @@ export const usePlanning = (dbStructures: CLStructure[]) => {
           creatorId: currentUser.id,
           isShared,
           isImported: false,
-          likes: 0,
-          likedBy: []
       };
       
       try {

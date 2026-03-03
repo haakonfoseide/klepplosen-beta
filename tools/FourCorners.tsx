@@ -3,8 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { Loader2, Sparkles, Save, Maximize2, Minimize2, Play, Trash2 } from 'lucide-react';
 import { generateFourCorners } from '../services/geminiService';
 import { COMMON_SUBJECTS, GRADES } from '../constants';
+import { useToast } from '../contexts/ToastContext';
 
 export const FourCorners = ({ t, language }: any) => {
+    const { addToast } = useToast();
     const [corners, setCorners] = useState(['Alternativ A', 'Alternativ B', 'Alternativ C', 'Alternativ D']);
     const [question, setQuestion] = useState('');
     const [mode, setMode] = useState<'input' | 'display'>('input');
@@ -44,7 +46,7 @@ export const FourCorners = ({ t, language }: any) => {
                 setCorners(newCorners);
             }
         } catch (e) {
-            alert("Kunne ikke generere. Prøv igjen.");
+            addToast("Kunne ikke generere. Prøv igjen.", 'error');
         } finally {
             setIsGenerating(false);
         }

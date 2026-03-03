@@ -163,8 +163,6 @@ export const QuizGame: React.FC<QuizGameProps> = ({ t, language, currentUser, is
                 creatorId: currentUser.id,
                 isShared: false,
                 isImported: false,
-                likes: 0,
-                likedBy: []
             };
 
             await storageService.savePlan(planToSave);

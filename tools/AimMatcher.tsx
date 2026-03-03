@@ -4,8 +4,10 @@ import { fetchCompetenceAims, matchStructuresToAim } from '../services/geminiSer
 import { COMMON_SUBJECTS, GRADES } from '../constants';
 import { Search, Compass, Loader2, Sparkles, Anchor, ArrowRight, Lightbulb, BookOpen, Layers } from 'lucide-react';
 import { CLStructure } from '../types';
+import { useToast } from '../contexts/ToastContext';
 
 export const AimMatcher = ({ dbStructures, t }: { dbStructures: CLStructure[], t: any }) => {
+  const { addToast } = useToast();
   const [subject, setSubject] = useState(COMMON_SUBJECTS[0]);
   const [grade, setGrade] = useState(GRADES[5]);
   const [topic, setTopic] = useState('');
@@ -23,7 +25,7 @@ export const AimMatcher = ({ dbStructures, t }: { dbStructures: CLStructure[], t
         const data = await fetchCompetenceAims(subject, grade, topic, 'nynorsk'); 
         setAims(data); 
     } 
-    catch { alert("Feil ved henting."); } 
+    catch { addToast("Feil ved henting.", 'error'); }
     finally { setLoading(false); }
   };
 
@@ -35,7 +37,7 @@ export const AimMatcher = ({ dbStructures, t }: { dbStructures: CLStructure[], t
         const data = await matchStructuresToAim(aim, dbStructures); 
         setMatches(data); 
     } 
-    catch { alert("Feil ved matching."); } 
+    catch { addToast("Feil ved matching.", 'error'); }
     finally { setLoading(false); }
   };
 

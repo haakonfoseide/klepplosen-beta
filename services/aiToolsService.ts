@@ -1,6 +1,6 @@
 
 import { Type } from "@google/genai";
-import { generateContentWithRetry, parseResponse, getAIClient } from "./aiUtils";
+import { generateContentWithRetry, parseResponse, getAIClient, AI_MODELS } from "./aiUtils";
 import { QuizQuestion, CLStructure, CompetenceAim } from "../types";
 
 export async function generateQuizQuestions(
@@ -41,7 +41,7 @@ export async function generateQuizQuestions(
   }
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: AI_MODELS.FLASH,
     contents: { parts: promptParts },
     config: { 
       tools: (isNews || autoImages) ? [{ googleSearch: {} }] : undefined,
@@ -87,7 +87,7 @@ export async function generateDailyKaiGreetings(name: string, language: string):
   VIKTIG: Lag 3 distinkte varianter.`;
 
   try {
-    const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, { 
+    const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, { 
         responseMimeType: 'application/json',
         responseSchema: {
             type: Type.ARRAY,
@@ -107,25 +107,25 @@ export async function generateDailyKaiGreetings(name: string, language: string):
 
 export async function extractKeywordsFromImage(base64: string, mimeType: string, subject: string, grade: string): Promise<any[]> {
   const prompt = [{ text: `Extract key terminology from this educational image. JSON: { "terms": [{ "word": string, "definition": string }] }` }, { inlineData: { mimeType, data: base64 } }];
-  const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, { responseMimeType: 'application/json' });
+  const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, { responseMimeType: 'application/json' });
   return parseResponse(res.text)?.terms || [];
 }
 
 export async function extractNamesFromImage(base64: string, mimeType: string): Promise<string[]> {
   const prompt = [{ text: "Extract list of names. JSON array of strings." }, { inlineData: { mimeType, data: base64 } }];
-  const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, { responseMimeType: 'application/json' });
+  const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, { responseMimeType: 'application/json' });
   return parseResponse(res.text) || [];
 }
 
 export async function parseWeeklyPlanImage(base64: string, mimeType: string): Promise<any[]> {
   const prompt = [{ text: "Parse ukeplan. JSON array: [{ day: string, startTime: string, durationMinutes: number, type: 'lesson'|'meeting', subject: string, title: string }]" }, { inlineData: { mimeType, data: base64 } }];
-  const res = await generateContentWithRetry('gemini-3.1-pro-preview', prompt, { responseMimeType: 'application/json' });
+  const res = await generateContentWithRetry(AI_MODELS.PRO, prompt, { responseMimeType: 'application/json' });
   return parseResponse(res.text) || [];
 }
 
 export async function parseAnnualPlanImage(base64: string, mimeType: string): Promise<any[]> {
   const prompt = [{ text: "Parse årsplan. JSON array: [{ week: number, subject: string, topic: string }]" }, { inlineData: { mimeType, data: base64 } }];
-  const res = await generateContentWithRetry('gemini-3.1-pro-preview', prompt, { responseMimeType: 'application/json' });
+  const res = await generateContentWithRetry(AI_MODELS.PRO, prompt, { responseMimeType: 'application/json' });
   return parseResponse(res.text) || [];
 }
 
@@ -146,7 +146,7 @@ export async function matchStructuresToAim(aim: CompetenceAim, structures: CLStr
     ]
   }`;
   
-  const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, { 
+  const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, { 
     stroke: undefined,
     responseMimeType: 'application/json',
     responseSchema: {
@@ -172,13 +172,13 @@ export async function matchStructuresToAim(aim: CompetenceAim, structures: CLStr
 
 export async function generateNoiseAdvice(grade: string, activity: string, level: 'high'|'low', language: string): Promise<{advice: string[]}> {
   const prompt = `3 tips noise level ${level} during ${activity} in ${grade}. JSON: { advice: string[] }`;
-  const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, { responseMimeType: 'application/json' });
+  const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, { responseMimeType: 'application/json' });
   return parseResponse(res.text);
 }
 
 export async function generateFourCorners(subject: string, grade: string, topic: string, language: string): Promise<any> {
   const prompt = `Four Corners for ${subject}, ${topic}. JSON: { question: string, corners: [string, string, string, string] }`;
-  const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, { responseMimeType: 'application/json' });
+  const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, { responseMimeType: 'application/json' });
   return parseResponse(res.text);
 }
 
@@ -217,7 +217,7 @@ export async function generateClassroomTool(type: string, config: any, language:
       schema.required = ['questions'];
   }
 
-  const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, { 
+  const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, { 
       responseMimeType: 'application/json',
       responseSchema: schema
   });
@@ -356,7 +356,7 @@ export async function generateOracyContent(type: string, config: any, language: 
       schema.required = ['devices'];
   }
 
-  const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, { 
+  const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, { 
       responseMimeType: 'application/json',
       responseSchema: schema,
       tools: tools
@@ -378,7 +378,7 @@ export async function generateStudentTalk(config: any, language: string, context
         promptParts.push({ inlineData: { mimeType: contextImage.mimeType, data: contextImage.data } });
     }
 
-    const res = await generateContentWithRetry('gemini-3-flash-preview', promptParts, { 
+    const res = await generateContentWithRetry(AI_MODELS.FLASH, promptParts, { 
         responseMimeType: 'application/json',
         responseSchema: {
             type: Type.OBJECT,

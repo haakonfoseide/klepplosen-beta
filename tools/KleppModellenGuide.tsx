@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Compass, ArrowRight, MessageCircle, FileText, CheckCircle2, Anchor, HelpCircle, ExternalLink, Lightbulb, Loader2, Clock, ChevronLeft, Ship, Map, Send, X, ShieldAlert, Sparkles, MessageSquare, ClipboardList, Mail, LayoutGrid, ScrollText, Heart, PenLine, Eye, ThumbsUp, User, Bot, GraduationCap, PlayCircle, BrainCircuit, CheckSquare, Microscope, Ear } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import { generateContentWithRetry, AI_MODELS } from '../services/aiUtils';
 
 type ConcernType = 'fagleg' | 'sosial' | 'heim' | 'fraver' | 'atferd';
 type SubView = 'main' | 'observation_helper' | 'parent_talk' | 'hypothesis_helper' | 'resource_hub';
@@ -85,7 +85,6 @@ export const KleppModellenGuide = ({ t, onBack }: KleppModellenGuideProps) => {
         setHypoResult(null);
         
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
             let prompt = "";
 
             if (taskType === 'analyze_hypothesis') {
@@ -99,17 +98,12 @@ export const KleppModellenGuide = ({ t, onBack }: KleppModellenGuideProps) => {
                 
                 Svarformat JSON: [{"hypothesis": "...", "question": "..."}, ...]`;
                 
-                const response = await ai.models.generateContent({
-                    model: 'gemini-3-flash-preview',
-                    contents: prompt,
-                    config: { responseMimeType: 'application/json' }
-                });
-                
+                const response = await generateContentWithRetry(AI_MODELS.FLASH, prompt, { responseMimeType: 'application/json' });
                 const data = JSON.parse(response.text || '[]');
                 setHypoResult(data);
 
             } else if (taskType === 'formulate_observation') {
-                prompt = `Du er KleppLosen Kai. Hjelp ein lærar med å formulere tekst til "Undringsprotokollen" (Nivå 0 i BTI/Kleppmodellen). 
+                prompt = `Du er KleppLosen Kai. Hjelp ein lærar med å formulere tekst til "Undringsprotokollen" (Nivå 0 i BTI/Kleppmodellen).
                    Strukturert observasjon:
                    1. Kontekst: "${obsData.context}"
                    2. Observasjon: "${obsData.observation}"
@@ -117,14 +111,14 @@ export const KleppModellenGuide = ({ t, onBack }: KleppModellenGuideProps) => {
                    4. Ressursar: "${obsData.strength}"
 
                    Oppgåve: Skriv ein samla, profesjonell og objektiv tekst. Nynorsk.`;
-                   
-                const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
+
+                const response = await generateContentWithRetry(AI_MODELS.FLASH, prompt);
                 setAiResult(response.text?.replace(/\*/g, '') || "Feil.");
 
             } else {
                 if (!userInput.trim()) return;
                 prompt = `Lag invitasjon til undringssamtale. Bakgrunn: "${userInput}". Tone: Vennleg, samarbeidande. Nynorsk.`;
-                const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
+                const response = await generateContentWithRetry(AI_MODELS.FLASH, prompt);
                 setAiResult(response.text?.replace(/\*/g, '') || "Feil.");
             }
 
@@ -141,18 +135,17 @@ export const KleppModellenGuide = ({ t, onBack }: KleppModellenGuideProps) => {
         setRoleplayHistory([]);
         setRoleplayFeedback(null);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
             const prompt = `Du er ein rollespel-bot. Du skal spele rolla som ein forelder til eleven "Alex".
             Læraren (brukaren) har invitert deg til ein samtale.
-            
+
             Scenario: ${roleplayScenario === 'worried' ? 'Du er bekymra for at Alex ikkje har vener.' : roleplayScenario === 'angry' ? 'Du er irritert fordi du meiner skulen er for streng.' : 'Du er open, men travel og litt stressa.'}
-            
+
             Din oppgåve:
             Start samtalen med ein kort replikk der du kjem inn i rommet eller tek telefonen.
             Ver naturleg, litt skeptisk men høfleg. Svar på nynorsk.
             IKKJE inkluder "Forelder:" i teksten.`;
 
-            const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
+            const response = await generateContentWithRetry(AI_MODELS.FLASH, prompt);
             setRoleplayHistory([{ role: 'model', text: response.text?.trim() || "Hei, eg kom så fort eg kunne." }]);
         } catch (e) { setError("Kunne ikkje starte rollespel."); } finally { setIsAILoading(false); }
     };
@@ -165,17 +158,16 @@ export const KleppModellenGuide = ({ t, onBack }: KleppModellenGuideProps) => {
         setUserInput('');
         setIsAILoading(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
             const prompt = `Vi er i eit rollespel. Du er forelder, eg er lærar (din motpart).
             Scenario: ${roleplayScenario}.
-            
+
             Historikk:
             ${newHistory.map(m => `${m.role === 'user' ? 'Lærar' : 'Forelder'}: ${m.text}`).join('\n')}
-            
-            Oppgåve: Svar som forelderen. Ver kort (1-2 setningar). Reager på det læraren seier. 
+
+            Oppgåve: Svar som forelderen. Ver kort (1-2 setningar). Reager på det læraren seier.
             Svar på nynorsk.`;
 
-            const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
+            const response = await generateContentWithRetry(AI_MODELS.FLASH, prompt);
             setRoleplayHistory([...newHistory, { role: 'model', text: response.text?.trim() || "..." }]);
         } catch (e) { setError("Feil."); } finally { setIsAILoading(false); }
     };
@@ -183,10 +175,9 @@ export const KleppModellenGuide = ({ t, onBack }: KleppModellenGuideProps) => {
     const finishRoleplay = async () => {
         setIsAILoading(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
             const prompt = `Analyser denne samtalen mellom ein lærar og ein forelder.
             Gi kort pedagogisk feedback til læraren (Nynorsk).`;
-            const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
+            const response = await generateContentWithRetry(AI_MODELS.FLASH, prompt);
             setRoleplayFeedback(response.text || "Feil.");
         } catch (e) { setError("Feil."); } finally { setIsAILoading(false); }
     };
@@ -203,11 +194,10 @@ export const KleppModellenGuide = ({ t, onBack }: KleppModellenGuideProps) => {
         setUserInput('');
         setIsKaiThinking(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-            const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
-                contents: `Du er KleppLosen Kai (BTI-ekspert). Svar kort på nynorsk. Spørsmål: ${messageToSend}`,
-            });
+            const response = await generateContentWithRetry(
+                AI_MODELS.FLASH,
+                `Du er KleppLosen Kai (BTI-ekspert). Svar kort på nynorsk. Spørsmål: ${messageToSend}`
+            );
             setChatHistory(prev => [...prev, { role: 'model', text: response.text?.replace(/\*/g, '') || "Feil." }]);
         } catch (e) { setChatHistory(prev => [...prev, { role: 'model', text: "Feil.", isError: true }]); } finally { setIsKaiThinking(false); }
     };

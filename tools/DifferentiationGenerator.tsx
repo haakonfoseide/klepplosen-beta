@@ -3,8 +3,10 @@ import React, { useState, useRef } from 'react';
 import { Camera, Loader2 } from 'lucide-react';
 import { generateDifferentiation } from '../services/geminiService';
 import { COMMON_SUBJECTS, GRADES } from '../constants';
+import { useToast } from '../contexts/ToastContext';
 
 export const DifferentiationGenerator = ({ t, language }: any) => {
+    const { addToast } = useToast();
     const [task, setTask] = useState('');
     const [grade, setGrade] = useState(GRADES[5]);
     const [subject, setSubject] = useState(COMMON_SUBJECTS[0]);
@@ -16,7 +18,7 @@ export const DifferentiationGenerator = ({ t, language }: any) => {
     const handleGenerate = async () => {
         setLoading(true);
         try { const res = await generateDifferentiation(task, subject, grade, images, language); setResult(res); } 
-        catch { alert("Feil ved generering."); } finally { setLoading(false); }
+        catch { addToast("Feil ved generering.", 'error'); } finally { setLoading(false); }
     };
 
     return (

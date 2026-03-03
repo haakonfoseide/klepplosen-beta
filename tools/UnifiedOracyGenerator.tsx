@@ -128,8 +128,6 @@ export const UnifiedOracyGenerator = ({ type, t, language, currentUser, initialD
                 creatorId: currentUser.id,
                 isShared: false,
                 isImported: false,
-                likes: 0,
-                likedBy: []
             };
             await storageService.savePlan(planToSave as any);
             setSaveStatus('saved');

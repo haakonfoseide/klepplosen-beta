@@ -5,8 +5,10 @@ import { GRADES } from '../constants';
 import { generateStudentTalk } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 import { SavedPlan, GeneratedTask } from '../types';
+import { useToast } from '../contexts/ToastContext';
 
 export const StudentTalkGenerator = ({ t, language, currentUser, isOwner = true, initialData, currentPlanId }: any) => {
+    const { addToast } = useToast();
     const [grade, setGrade] = useState(initialData?.grade || GRADES[0]);
     const [topic, setTopic] = useState(initialData?.topic || '');
     const [uploadedImage, setUploadedImage] = useState<{data: string, mimeType: string} | null>(null);
@@ -24,7 +26,7 @@ export const StudentTalkGenerator = ({ t, language, currentUser, isOwner = true,
             const res = await generateStudentTalk({ grade, topic }, language, uploadedImage || undefined);
             setResult(res);
         } catch (e) {
-            alert("Feil ved generering: " + e);
+            addToast("Feil ved generering.", 'error');
         } finally {
             setLoading(false);
         }
@@ -65,8 +67,6 @@ export const StudentTalkGenerator = ({ t, language, currentUser, isOwner = true,
                 creatorId: currentUser.id,
                 isShared: isShared,
                 isImported: false,
-                likes: 0,
-                likedBy: []
             };
             await storageService.savePlan(planToSave as any);
             setSaveStatus('saved');

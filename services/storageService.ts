@@ -103,7 +103,11 @@ export const storageService = {
 
   // Plans
   savePlan: async (plan: SavedPlan) => {
-      const { data, error } = await supabase.from('plans').upsert(plan);
+      // Strip likes/likedBy so existing values are never overwritten on update.
+      // DB defaults (0 / []) apply for new rows automatically.
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { likes: _l, likedBy: _lb, ...planData } = plan as any;
+      const { data, error } = await supabase.from('plans').upsert(planData);
       if (error) {
           console.error("Error saving plan:", error);
           throw error;
@@ -235,9 +239,8 @@ export const storageService = {
   logAnalytics: async (event: string) => {
       if (event === 'visit') {
           try {
-              const { data } = await supabase.from('system_settings').select('value').eq('key', 'total_visits').single();
-              const newValue = (data?.value || 0) + 1;
-              await supabase.from('system_settings').upsert({ key: 'total_visits', value: newValue });
+              // Atomic increment via RPC to prevent race conditions
+              await supabase.rpc('increment_visits');
           } catch (e) {
               console.error("Failed to log visit", e);
           }

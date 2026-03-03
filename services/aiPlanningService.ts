@@ -1,7 +1,7 @@
 
 import { Type } from "@google/genai";
 import { GeneratedTask, CLStructure, CompetenceAim } from "../types";
-import { generateContentWithRetry, parseResponse } from "./aiUtils";
+import { generateContentWithRetry, parseResponse, AI_MODELS } from "./aiUtils";
 import { PROMPTS } from "./prompts";
 
 export async function recommendStructures(subject: string, topic: string, aims: CompetenceAim[], structures: CLStructure[], language: string): Promise<{id: string, reason: string}[]> {
@@ -11,7 +11,7 @@ export async function recommendStructures(subject: string, topic: string, aims: 
     const prompt = PROMPTS.RECOMMEND_STRUCTURES(subject, topic, aimsText, structureLite, language);
 
     try {
-        const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, { 
+        const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, { 
             responseMimeType: 'application/json',
             responseSchema: {
                 type: Type.ARRAY,
@@ -35,7 +35,7 @@ export async function recommendStructures(subject: string, topic: string, aims: 
 export async function remixTask(originalTask: GeneratedTask, mode: 'simplify' | 'active' | 'critical' | 'creative' | 'differentiation', language: string): Promise<GeneratedTask> {
     const prompt = PROMPTS.REMIX_TASK(originalTask, mode, language);
 
-    const res = await generateContentWithRetry('gemini-3.1-pro-preview', prompt, {
+    const res = await generateContentWithRetry(AI_MODELS.PRO, prompt, {
         responseMimeType: 'application/json'
     });
 
@@ -85,7 +85,7 @@ export async function generateSubstitutePlan(config: any, language: string, avai
       configObj.tools = [{ googleSearch: {} }];
   }
 
-  const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, configObj);
+  const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, configObj);
   return parseResponse(res.text);
 }
 
@@ -108,7 +108,7 @@ export async function generateCLTask(subject: string, grade: string, topic: stri
   const promptParts: any[] = [{ text: prompt }];
   if (images) images.forEach(img => promptParts.push({ inlineData: { mimeType: img.mimeType, data: img.data } }));
   
-  const res = await generateContentWithRetry('gemini-3.1-pro-preview', promptParts, { 
+  const res = await generateContentWithRetry(AI_MODELS.PRO, promptParts, { 
       responseMimeType: 'application/json'
   });
   
@@ -139,7 +139,7 @@ export async function generateCLTask(subject: string, grade: string, topic: stri
 export async function generateProjectPlan(subject: string, grade: string, topic: string, product: string, language: string): Promise<any> {
   const prompt = PROMPTS.PROJECT_PLAN(subject, grade, topic, product, language);
   
-  const res = await generateContentWithRetry('gemini-3.1-pro-preview', prompt, { 
+  const res = await generateContentWithRetry(AI_MODELS.PRO, prompt, { 
     responseMimeType: 'application/json',
     responseSchema: {
       type: Type.OBJECT,
@@ -173,7 +173,7 @@ export async function generateDifferentiation(task: string, subject: string, gra
   const promptParts: any[] = [{ text: PROMPTS.DIFFERENTIATION(task, subject, grade, language) }];
   if (images) images.forEach(img => promptParts.push({ inlineData: { mimeType: img.mimeType, data: img.data } }));
   
-  const res = await generateContentWithRetry('gemini-3-flash-preview', promptParts, { 
+  const res = await generateContentWithRetry(AI_MODELS.FLASH, promptParts, { 
     responseMimeType: 'application/json',
     responseSchema: {
         type: Type.OBJECT,

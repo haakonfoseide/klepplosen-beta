@@ -5,8 +5,10 @@ import { generateClassroomTool } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 import { COMMON_SUBJECTS, LANGUAGE_SUBJECTS, ELECTIVE_SUBJECTS, GRADES } from '../constants';
 import { SavedPlan, GeneratedTask } from '../types';
+import { useToast } from '../contexts/ToastContext';
 
 export const AIGenerator = ({ type, placeholder, icon: Icon, color, t, language, currentUser, isOwner = true, initialData, currentPlanId }: any) => {
+    const { addToast } = useToast();
     const [subjectCat, setSubjectCat] = useState('common');
     const [topic, setTopic] = useState(initialData?.topic || '');
     const [grade, setGrade] = useState(initialData?.grade || GRADES[0]);
@@ -34,7 +36,7 @@ export const AIGenerator = ({ type, placeholder, icon: Icon, color, t, language,
     const handleGenerate = async () => {
         setLoading(true); setResult(null); setIsEditing(false); setSaveStatus(null);
         try { const res = await generateClassroomTool(type, { subject, grade, topic, style, amount }, language); setResult(res); } 
-        catch { alert("Feil ved generering."); } finally { setLoading(false); }
+        catch { addToast("Feil ved generering.", 'error'); } finally { setLoading(false); }
     };
 
     const handleSaveEdit = () => {
@@ -93,8 +95,6 @@ export const AIGenerator = ({ type, placeholder, icon: Icon, color, t, language,
                 creatorId: currentUser.id,
                 isShared: false,
                 isImported: false,
-                likes: 0,
-                likedBy: []
             };
 
             await storageService.savePlan(planToSave as any); // Type cast due to optional ID in logic

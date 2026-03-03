@@ -3,11 +3,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { User } from '../../types';
 import { storageService } from '../../services/storageService';
 import { Loader2, RefreshCw, ArrowUpDown, UserX, UserCheck } from 'lucide-react';
+import { useToast } from '../../contexts/ToastContext';
 
 export const UserManagement: React.FC = () => {
+    const { addToast } = useToast();
     const [users, setUsers] = useState<User[]>([]);
     const [loadingUsers, setLoadingUsers] = useState(false);
     const [sortConfig, setSortConfig] = useState<{ key: keyof User | 'lastActive', direction: 'asc' | 'desc' }>({ key: 'lastActive', direction: 'desc' });
+    const [pendingRoleChangeId, setPendingRoleChangeId] = useState<string | null>(null);
 
     useEffect(() => {
         loadUsers();
@@ -55,14 +58,15 @@ export const UserManagement: React.FC = () => {
     }, [users, sortConfig]);
 
     const handleToggleAdmin = async (userId: string, currentRole: string) => {
+        if (pendingRoleChangeId !== userId) { setPendingRoleChangeId(userId); return; }
+        setPendingRoleChangeId(null);
         const newRole = currentRole === 'admin' ? 'user' : 'admin';
-        if (confirm(`Vil du endre rollen til denne brukeren til ${newRole.toUpperCase()}?`)) {
-            try {
-                await storageService.updateUserRole(userId, newRole);
-                setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
-            } catch (e: any) {
-                alert("Feil ved oppdatering av rolle: " + e.message);
-            }
+        try {
+            await storageService.updateUserRole(userId, newRole);
+            setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+            addToast(`Rolle endret til ${newRole.toUpperCase()}.`, 'success');
+        } catch (e: any) {
+            addToast("Feil ved oppdatering av rolle: " + e.message, 'error');
         }
     };
 
@@ -120,11 +124,12 @@ export const UserManagement: React.FC = () => {
                                             </span>
                                         </td>
                                         <td className="p-6 text-right">
-                                            <button 
+                                            <button
                                                 onClick={() => handleToggleAdmin(user.id, user.role)}
-                                                className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border flex items-center gap-2 ml-auto ${user.role === 'admin' ? 'bg-white border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200' : 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700'}`}
+                                                className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border flex items-center gap-2 ml-auto ${pendingRoleChangeId === user.id ? 'bg-orange-500 text-white border-orange-500' : user.role === 'admin' ? 'bg-white border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200' : 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700'}`}
+                                                title={pendingRoleChangeId === user.id ? "Klikk igjen for å bekrefte" : undefined}
                                             >
-                                                {user.role === 'admin' ? <><UserX size={12} /> Fjern Admin</> : <><UserCheck size={12} /> Gjør Admin</>}
+                                                {pendingRoleChangeId === user.id ? "Bekreft?" : user.role === 'admin' ? <><UserX size={12} /> Fjern Admin</> : <><UserCheck size={12} /> Gjør Admin</>}
                                             </button>
                                         </td>
                                     </tr>

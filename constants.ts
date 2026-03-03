@@ -5,6 +5,20 @@ import {
   Dumbbell, Utensils, BookText, Languages, Lightbulb
 } from 'lucide-react';
 
+// Plan type constants — used as planType in SavedPlan.task
+export const PLAN_TYPES = {
+  CL: 'cl',
+  QUIZ: 'quiz',
+  PROJECT: 'project',
+  TOOL: 'tool',
+  LESSON_STUDY: 'lesson_study',
+  SUBSTITUTE: 'substitute',
+  STUDENT_TALK: 'student_talk',
+  ORACY: 'oracy',
+  CROSSWORD: 'crossword',
+} as const;
+export type PlanType = typeof PLAN_TYPES[keyof typeof PLAN_TYPES];
+
 export const GRADES = [
   '1. trinn', '2. trinn', '3. trinn', '4. trinn', '5. trinn', '6. trinn', '7. trinn',
   '8. trinn', '9. trinn', '10. trinn', 'Vg1', 'Vg2', 'Vg3'

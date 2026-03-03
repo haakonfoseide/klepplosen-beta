@@ -5,6 +5,7 @@ import { CATEGORY_COLORS } from './constants';
 import { CLStructure } from './types';
 import { storageService } from './services/storageService';
 import { StructureDetailModal } from './StructureDetailModal';
+import { useToast } from './contexts/ToastContext';
 
 interface GuideViewProps {
   onBack: () => void;
@@ -18,6 +19,7 @@ interface GuideViewProps {
 type SortOption = 'alphabetical' | 'duration' | 'popularity' | 'favorites';
 
 export const GuideView: React.FC<GuideViewProps> = ({ onBack, t, dbStructures, language = 'bokmål', currentUser, onRefresh }) => {
+  const { addToast } = useToast();
   const [search, setSearch] = useState('');
   const [selectedStructure, setSelectedStructure] = useState<CLStructure | null>(null);
   
@@ -28,6 +30,7 @@ export const GuideView: React.FC<GuideViewProps> = ({ onBack, t, dbStructures, l
   const [selectedDuration, setSelectedDuration] = useState<string>('alle');
   
   const [favorites, setFavorites] = useState<string[]>(() => storageService.local.getFavorites());
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const getLocalizedContent = useCallback((s: CLStructure) => {
     if (language === 'bokmål' || !s.translations) return s;
@@ -97,12 +100,13 @@ export const GuideView: React.FC<GuideViewProps> = ({ onBack, t, dbStructures, l
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (!confirm(t.deleteConfirm)) return;
+    if (pendingDeleteId !== id) { setPendingDeleteId(id); return; }
+    setPendingDeleteId(null);
     try {
       await storageService.deleteCLStructure(id);
       if (onRefresh) onRefresh();
     } catch (err: any) {
-      alert("Feil: " + err.message);
+      addToast("Feil: " + err.message, 'error');
     }
   };
 
@@ -135,7 +139,7 @@ export const GuideView: React.FC<GuideViewProps> = ({ onBack, t, dbStructures, l
       if (onRefresh) onRefresh();
       setSelectedStructure(updatedStructure);
     } catch (err: any) {
-      alert("Feil ved lagring: " + err.message);
+      addToast("Feil ved lagring: " + err.message, 'error');
     }
   };
 

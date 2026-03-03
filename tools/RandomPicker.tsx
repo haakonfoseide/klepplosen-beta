@@ -146,11 +146,10 @@ export const RandomPicker = ({ t }: any) => {
     }, []);
 
     const resetHistory = () => {
-        if(confirm("Vil du nullstille historikken? Alle navn blir tilgjengelige igjen.")) {
-            setPickHistory([]);
-            setWinner(null);
-            setDisplayCandidate('?');
-        }
+        setPickHistory([]);
+        setWinner(null);
+        setDisplayCandidate('?');
+        addToast("Historikk nullstilt.", 'success');
     };
 
     const handleScanList = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,7 +208,7 @@ export const RandomPicker = ({ t }: any) => {
                         </button>
                     )}
                     {namesText && (
-                        <button onClick={() => { if(confirm('Slette alle navn?')) setNamesText(''); }} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                        <button onClick={() => setNamesText('')} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
                             <Trash2 size={16} />
                         </button>
                     )}

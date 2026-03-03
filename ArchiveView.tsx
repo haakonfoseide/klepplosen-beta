@@ -28,6 +28,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<string>('alle');
   const [selectedGrade, setSelectedGrade] = useState<string>('alle');
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const subjectsList = ['alle', ...COMMON_SUBJECTS, ...LANGUAGE_SUBJECTS, ...ELECTIVE_SUBJECTS];
 
@@ -243,13 +244,14 @@ export const ArchiveView: React.FC<ArchiveViewProps> = ({
                              {isOwner ? <Edit size={14} /> : <Eye size={14} />}
                          </button>
                         {(archiveTab === 'mine' || currentUser?.role === 'admin') && (
-                          <button 
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              if (confirm(t.deleteConfirm)) onDelete(plan.id); 
-                            }} 
-                            className="p-2 bg-white text-slate-300 hover:text-red-500 rounded-xl transition-all border shadow-sm"
-                            title="Slett"
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (pendingDeleteId === plan.id) { onDelete(plan.id); setPendingDeleteId(null); }
+                              else setPendingDeleteId(plan.id);
+                            }}
+                            className={`p-2 rounded-xl transition-all border shadow-sm ${pendingDeleteId === plan.id ? 'bg-red-500 text-white border-red-500' : 'bg-white text-slate-300 hover:text-red-500'}`}
+                            title={pendingDeleteId === plan.id ? "Klikk igjen for å bekrefte sletting" : "Slett"}
                           >
                             <Trash2 size={14} />
                           </button>

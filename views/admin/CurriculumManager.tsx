@@ -4,8 +4,10 @@ import { fetchSubjectCodeFromUDIR, fetchAllCompetenceAims } from '../../services
 import { Loader2, Search, Save, RefreshCw, BookOpen, Trash2, Plus, Target, CheckCircle, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { GRADES, DEFAULT_SUBJECT_CODES } from '../../constants';
 import { Subject } from '../../types';
+import { useToast } from '../../contexts/ToastContext';
 
 export const CurriculumManager: React.FC = () => {
+    const { addToast } = useToast();
     const [viewMode, setViewMode] = useState<'codes' | 'aims'>('aims');
     
     // Codes State
@@ -73,7 +75,7 @@ export const CurriculumManager: React.FC = () => {
                 await handleSaveCode(subject, code);
             }
         } catch (e) {
-            alert(`Kunne ikke hente kode for ${subject}`);
+            addToast(`Kunne ikke hente kode for ${subject}`, 'error');
         } finally {
             setProcessingSubject(null);
         }
@@ -135,7 +137,7 @@ export const CurriculumManager: React.FC = () => {
             setAimsSaved(true);
             setTimeout(() => setAimsSaved(false), 3000);
         } catch {
-            alert("Kunne ikke lagre mål.");
+            addToast("Kunne ikke lagre mål.", 'error');
         } finally {
             setLoadingAims(false);
         }
@@ -161,7 +163,6 @@ export const CurriculumManager: React.FC = () => {
 
     const handleAutoFillAims = async () => {
         if (!selectedSubject || !selectedGrade) return;
-        if (aims.length > 0 && !window.confirm("Dette vil overskrive eksisterende mål. Er du sikker?")) return;
         
         setLoadingAims(true);
         try {
@@ -170,11 +171,11 @@ export const CurriculumManager: React.FC = () => {
                 setAims(newAims);
                 setAimsSaved(false);
             } else {
-                alert("Fant ingen mål for dette faget/trinnet.");
+                addToast("Fant ingen mål for dette faget/trinnet.", 'error');
             }
         } catch (e) {
             console.error("Failed to fetch aims", e);
-            alert("Kunne ikke hente mål.");
+            addToast("Kunne ikke hente mål.", 'error');
         } finally {
             setLoadingAims(false);
         }

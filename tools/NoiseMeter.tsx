@@ -3,8 +3,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Activity, BarChart3, Clock, Sparkles, MessageSquare, Loader2, Mic } from 'lucide-react';
 import { generateNoiseAdvice } from '../services/geminiService';
 import { GRADES } from '../constants';
+import { useToast } from '../contexts/ToastContext';
 
 export const NoiseMeter = ({ t = {}, language = 'nynorsk' }: any) => {
+    const { addToast } = useToast();
     const [isListening, setIsListening] = useState(false);
     const [volume, setVolume] = useState(0);
     const [threshold, setThreshold] = useState(70);
@@ -50,7 +52,7 @@ export const NoiseMeter = ({ t = {}, language = 'nynorsk' }: any) => {
             
             setIsListening(true);
             updateVolume();
-        } catch { alert("Mikrofontilgang mangler."); }
+        } catch { addToast("Mikrofontilgang mangler.", 'error'); }
     };
     
     const stopMicrophone = () => {

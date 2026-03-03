@@ -12,15 +12,19 @@ export const ClassManager: React.FC = () => {
     const [selectedClass, setSelectedClass] = useState<Class | null>(null);
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(false);
-    
+
     // Create/Edit Class State
     const [isCreating, setIsCreating] = useState(false);
     const [newClassName, setNewClassName] = useState('');
     const [newClassGrade, setNewClassGrade] = useState(GRADES[0]);
-    
+
     // Add Students State
     const [studentInput, setStudentInput] = useState('');
     const [isAddingStudents, setIsAddingStudents] = useState(false);
+
+    // Inline confirmation state
+    const [pendingDeleteClassId, setPendingDeleteClassId] = useState<string | null>(null);
+    const [pendingDeleteStudentId, setPendingDeleteStudentId] = useState<string | null>(null);
 
     const loadClasses = useCallback(async () => {
         setLoading(true);
@@ -73,7 +77,8 @@ export const ClassManager: React.FC = () => {
     };
 
     const handleDeleteClass = async (id: string) => {
-        if (!confirm("Er du sikker? Dette sletter klassen og alle elever.")) return;
+        if (pendingDeleteClassId !== id) { setPendingDeleteClassId(id); return; }
+        setPendingDeleteClassId(null);
         try {
             await storageService.deleteClass(id);
             setClasses(prev => prev.filter(c => c.id !== id));
@@ -116,7 +121,8 @@ export const ClassManager: React.FC = () => {
     };
 
     const handleDeleteStudent = async (id: string) => {
-        if (!confirm("Fjerne elev fra klassen?")) return;
+        if (pendingDeleteStudentId !== id) { setPendingDeleteStudentId(id); return; }
+        setPendingDeleteStudentId(null);
         try {
             await storageService.deleteStudent(id);
             setStudents(prev => prev.filter(s => s.id !== id));
@@ -169,7 +175,7 @@ export const ClassManager: React.FC = () => {
                             <span className={`text-[10px] font-bold ${selectedClass?.id === c.id ? 'text-indigo-200' : 'text-slate-400'}`}>{c.studentCount} elever</span>
                             
                             {selectedClass?.id === c.id && (
-                                <div onClick={(e) => { e.stopPropagation(); handleDeleteClass(c.id); }} className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:scale-110">
+                                <div onClick={(e) => { e.stopPropagation(); handleDeleteClass(c.id); }} className={`absolute -top-2 -right-2 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:scale-110 ${pendingDeleteClassId === c.id ? 'bg-orange-500' : 'bg-red-500'} text-white`} title={pendingDeleteClassId === c.id ? "Klikk igjen for å bekrefte sletting" : "Slett klasse"}>
                                     <Trash2 size={12} />
                                 </div>
                             )}
@@ -228,7 +234,7 @@ export const ClassManager: React.FC = () => {
                                         <button onClick={() => handleUpdateStudent(student, { needsFocus: !student.needsFocus })} className={`p-1 rounded hover:bg-slate-100 ${student.needsFocus ? 'text-red-500' : 'text-slate-300'}`} title="Marker for fokus">
                                             <Eye size={14} />
                                         </button>
-                                        <button onClick={() => handleDeleteStudent(student.id)} className="p-1 rounded hover:bg-red-50 text-slate-300 hover:text-red-500">
+                                        <button onClick={() => handleDeleteStudent(student.id)} className={`p-1 rounded ${pendingDeleteStudentId === student.id ? 'bg-orange-100 text-orange-600' : 'hover:bg-red-50 text-slate-300 hover:text-red-500'}`} title={pendingDeleteStudentId === student.id ? "Klikk igjen for å bekrefte" : "Fjern elev"}>
                                             <Trash2 size={14} />
                                         </button>
                                     </div>

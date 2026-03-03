@@ -68,6 +68,7 @@ export const LessonStudyTool: React.FC<LessonStudyToolProps> = ({ t, onBack, cur
     // UI States
     const [logInput, setLogInput] = useState('');
     const [showResourceModal, setShowResourceModal] = useState(false);
+    const [pendingDeleteProjectId, setPendingDeleteProjectId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [resourceFiles, setResourceFiles] = useState<{name: string, url: string}[]>([]);
@@ -178,8 +179,6 @@ export const LessonStudyTool: React.FC<LessonStudyToolProps> = ({ t, onBack, cur
             creatorId: currentUser?.id || '',
             isShared: false,
             isImported: false,
-            likes: 0,
-            likedBy: []
         };
         setCurrentProject(newProject);
         setData(INITIAL_LS_DATA);
@@ -234,8 +233,6 @@ export const LessonStudyTool: React.FC<LessonStudyToolProps> = ({ t, onBack, cur
             creatorId: currentUser?.id || '',
             isShared: false,
             isImported: false,
-            likes: 0,
-            likedBy: []
         };
 
         await storageService.savePlan(newProject);
@@ -285,7 +282,8 @@ export const LessonStudyTool: React.FC<LessonStudyToolProps> = ({ t, onBack, cur
 
     const deleteProject = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
-        if (!confirm("Er du sikker på at du vil slette dette prosjektet?")) return;
+        if (pendingDeleteProjectId !== id) { setPendingDeleteProjectId(id); return; }
+        setPendingDeleteProjectId(null);
         try {
             await storageService.deletePlan(id);
             addToast("Prosjekt slettet", 'info');
@@ -327,7 +325,6 @@ export const LessonStudyTool: React.FC<LessonStudyToolProps> = ({ t, onBack, cur
     };
 
     const removeTarget = (id: string) => {
-        if(!confirm("Slett dette observasjonsobjektet?")) return;
         updateActiveSession({ targets: activeSession.targets.filter(t => t.id !== id) });
     };
 
@@ -729,7 +726,7 @@ export const LessonStudyTool: React.FC<LessonStudyToolProps> = ({ t, onBack, cur
                 {/* ... Projects Grid ... */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {loading ? <div className="col-span-full py-20 flex justify-center"><Loader2 className="animate-spin text-teal-600" size={40}/></div> : projects.length === 0 ? <div className="col-span-full py-20 text-center opacity-40"><Microscope size={64} className="mx-auto mb-4"/><p className="font-black uppercase tracking-widest text-xs">Ingen prosjekter enda.</p></div> : projects.map(p => (
-                        <div key={p.id} onClick={() => openProject(p)} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-teal-200 transition-all group cursor-pointer relative overflow-hidden flex flex-col h-full"><div className="absolute top-0 right-0 w-24 h-24 bg-teal-50 rounded-bl-full -mr-10 -mt-10 group-hover:scale-110 transition-transform"></div><div className="relative z-10 flex justify-between items-start mb-4"><h3 className="font-black text-lg text-slate-900 uppercase tracking-tight line-clamp-2">{p.task.title}</h3><button onClick={(e) => deleteProject(e, p.id)} className="text-slate-300 hover:text-red-500 transition-colors p-1 bg-white rounded-full shadow-sm"><Trash2 size={14}/></button></div><p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 relative z-10">{p.date} • {p.creator}</p><div className="mt-auto relative z-10"><div className="w-full bg-slate-100 h-1.5 rounded-full mb-3 overflow-hidden"><div className={`h-full rounded-full transition-all duration-500 ${p.task.lessonStudy?.step === 3 ? 'bg-emerald-500 w-full' : p.task.lessonStudy?.step === 2 ? 'bg-amber-500 w-2/3' : 'bg-teal-500 w-1/3'}`}></div></div><div className="flex justify-between items-end"><span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${p.task.lessonStudy?.step === 3 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{p.task.lessonStudy?.step === 1 ? 'Planlegging' : p.task.lessonStudy?.step === 2 ? 'Observasjon' : 'Refleksjon'}</span><div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-teal-600 group-hover:text-white transition-colors"><ArrowRight size={14} /></div></div></div></div>
+                        <div key={p.id} onClick={() => openProject(p)} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-teal-200 transition-all group cursor-pointer relative overflow-hidden flex flex-col h-full"><div className="absolute top-0 right-0 w-24 h-24 bg-teal-50 rounded-bl-full -mr-10 -mt-10 group-hover:scale-110 transition-transform"></div><div className="relative z-10 flex justify-between items-start mb-4"><h3 className="font-black text-lg text-slate-900 uppercase tracking-tight line-clamp-2">{p.task.title}</h3><button onClick={(e) => deleteProject(e, p.id)} className={`transition-colors p-1 rounded-full shadow-sm ${pendingDeleteProjectId === p.id ? 'bg-red-500 text-white' : 'text-slate-300 hover:text-red-500 bg-white'}`} title={pendingDeleteProjectId === p.id ? "Klikk igjen for å bekrefte sletting" : "Slett prosjekt"}><Trash2 size={14}/></button></div><p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 relative z-10">{p.date} • {p.creator}</p><div className="mt-auto relative z-10"><div className="w-full bg-slate-100 h-1.5 rounded-full mb-3 overflow-hidden"><div className={`h-full rounded-full transition-all duration-500 ${p.task.lessonStudy?.step === 3 ? 'bg-emerald-500 w-full' : p.task.lessonStudy?.step === 2 ? 'bg-amber-500 w-2/3' : 'bg-teal-500 w-1/3'}`}></div></div><div className="flex justify-between items-end"><span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${p.task.lessonStudy?.step === 3 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>{p.task.lessonStudy?.step === 1 ? 'Planlegging' : p.task.lessonStudy?.step === 2 ? 'Observasjon' : 'Refleksjon'}</span><div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-teal-600 group-hover:text-white transition-colors"><ArrowRight size={14} /></div></div></div></div>
                     ))}
                 </div>
                 {/* ... Resources ... */}

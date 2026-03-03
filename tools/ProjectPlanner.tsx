@@ -6,8 +6,10 @@ import { storageService } from '../services/storageService';
 import { COMMON_SUBJECTS, LANGUAGE_SUBJECTS, ELECTIVE_SUBJECTS, GRADES } from '../constants';
 import { BulletList } from '../CommonComponents';
 import { SavedPlan, GeneratedTask } from '../types';
+import { useToast } from '../contexts/ToastContext';
 
 export const ProjectPlanner = ({ t, language, currentUser, isOwner = true, initialData, currentPlanId }: any) => {
+    const { addToast } = useToast();
     const [subjectCat, setSubjectCat] = useState('common');
     const [subject, setSubject] = useState(initialData?.subject || COMMON_SUBJECTS[0]);
     const [grade, setGrade] = useState(initialData?.grade || GRADES[5]);
@@ -35,7 +37,7 @@ export const ProjectPlanner = ({ t, language, currentUser, isOwner = true, initi
     const handleGenerate = async () => {
         setLoading(true); setResult(null); setIsEditing(false); setSaveStatus(null);
         try { const res = await generateProjectPlan(subject, grade, topic, product || 'Valgfritt produkt', language); setResult(res); } 
-        catch { alert("Feil ved generering."); } finally { setLoading(false); }
+        catch { addToast("Feil ved generering.", 'error'); } finally { setLoading(false); }
     };
 
     const handleSaveEdit = () => {
@@ -82,8 +84,6 @@ export const ProjectPlanner = ({ t, language, currentUser, isOwner = true, initi
                 creatorId: currentUser.id,
                 isShared: isShared,
                 isImported: false,
-                likes: 0,
-                likedBy: []
             };
 
             await storageService.savePlan(planToSave as any);

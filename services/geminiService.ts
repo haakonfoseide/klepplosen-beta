@@ -1,5 +1,5 @@
 
-import { generateContentWithRetry, parseResponse } from "./aiUtils";
+import { generateContentWithRetry, parseResponse, AI_MODELS } from "./aiUtils";
 import { Type } from "@google/genai";
 import { PROMPTS } from "./prompts";
 
@@ -15,7 +15,7 @@ export async function analyzeLessonStudyObservation(prediction: string, observat
     const prompt = PROMPTS.ANALYZE_LESSON_STUDY(prediction, observation, description, language);
 
     try {
-        const res = await generateContentWithRetry('gemini-3.1-pro-preview', prompt, {
+        const res = await generateContentWithRetry(AI_MODELS.PRO, prompt, {
             responseMimeType: 'application/json',
             responseSchema: {
                 type: Type.OBJECT,
@@ -35,7 +35,7 @@ export async function generateLessonStudyQuestions(subject: string, topic: strin
     const prompt = PROMPTS.LESSON_STUDY_QUESTIONS(subject, topic, grade, language);
 
     try {
-        const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, {
+        const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, {
             responseMimeType: 'application/json',
             responseSchema: {
                 type: Type.OBJECT,
@@ -54,14 +54,14 @@ export async function findPedagogicalResearch(subject: string, topic: string, gr
     const prompt = PROMPTS.PEDAGOGICAL_RESEARCH(subject, topic, grade, language);
 
     try {
-        const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, {
+        const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, {
             tools: [{ googleSearch: {} }]
         });
         
         const jsonPrompt = `${prompt} 
         Returner svaret som JSON: { "text": "Oppsummering av teori...", "links": [{ "title": "Kilde 1", "url": "..." }] }`;
         
-        const jsonRes = await generateContentWithRetry('gemini-3-flash-preview', jsonPrompt, {
+        const jsonRes = await generateContentWithRetry(AI_MODELS.FLASH, jsonPrompt, {
             responseMimeType: 'application/json',
             tools: [{ googleSearch: {} }]
         });
@@ -80,7 +80,7 @@ export async function generateLessonStudyMeasures(findings: string, language: st
     const prompt = PROMPTS.LESSON_STUDY_MEASURES(findings, language);
 
     try {
-        const res = await generateContentWithRetry('gemini-3-flash-preview', prompt);
+        const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt);
         return res.text || "";
     } catch (e) {
         return "";
@@ -91,7 +91,7 @@ export async function generateObservationChecklist(researchQuestion: string, pre
     const prompt = PROMPTS.OBSERVATION_CHECKLIST(researchQuestion, prediction, language);
 
     try {
-        const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, {
+        const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, {
             responseMimeType: 'application/json',
             responseSchema: {
                 type: Type.OBJECT,
@@ -111,7 +111,7 @@ export async function generateInterviewQuestions(researchQuestion: string, age: 
     const prompt = PROMPTS.INTERVIEW_QUESTIONS(researchQuestion, age, language);
 
     try {
-        const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, {
+        const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, {
             responseMimeType: 'application/json',
             responseSchema: {
                 type: Type.OBJECT,
@@ -130,7 +130,7 @@ export async function generateCrosswordWordList(subject: string, topic: string, 
     const prompt = PROMPTS.CROSSWORD_WORDLIST(subject, topic, difficulty, language);
 
     try {
-        const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, {
+        const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, {
             responseMimeType: 'application/json',
             responseSchema: {
                 type: Type.OBJECT,
@@ -171,7 +171,7 @@ export async function generateCrosswordData(
     const prompt = PROMPTS.CROSSWORD_DATA(subject, topic, difficulty, gridSize, language, gameType, customWordsContext);
 
     try {
-        const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, {
+        const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, {
             responseMimeType: 'application/json',
             responseSchema: {
                 type: Type.OBJECT,
@@ -217,7 +217,7 @@ Eleven svarte: ${wrongAnswer}
 
 Gi et kort, pedagogisk hint (maks 2 setninger) som hjelper eleven på vei uten å gi svaret direkte. Bruk et enkelt språk.`;
 
-        const response = await generateContentWithRetry('gemini-3-flash-preview', prompt, {
+        const response = await generateContentWithRetry(AI_MODELS.FLASH, prompt, {
             temperature: 0.7,
         });
 
@@ -238,7 +238,7 @@ Sluttnivå: ${level} (1-10)
 
 Fokuser på innsats og mestring. Bruk et barnevennlig språk.`;
 
-        const response = await generateContentWithRetry('gemini-3-flash-preview', prompt, {
+        const response = await generateContentWithRetry(AI_MODELS.FLASH, prompt, {
             temperature: 0.7,
         });
 
@@ -259,7 +259,7 @@ Returner KUN et JSON-objekt på formatet: {"q": "oppgavetekst", "a": tall}
 Eksempel: {"q": "5 + 5", "a": 10}`;
 
     try {
-        const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, {
+        const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, {
             responseMimeType: 'application/json',
             responseSchema: {
                 type: Type.OBJECT,

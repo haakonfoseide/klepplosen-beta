@@ -88,8 +88,31 @@ CREATE POLICY "Oracy resources delete" ON public.oracy_resources FOR DELETE USIN
 
 CREATE POLICY "Quiz sessions read" ON public.quiz_sessions FOR SELECT USING (true);
 CREATE POLICY "Quiz sessions insert" ON public.quiz_sessions FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "Quiz sessions update" ON public.quiz_sessions FOR UPDATE USING (auth.role() = 'authenticated' OR true); -- Tillat update for å forenkle demo, ideelt sett kun eier
+-- Quiz sessions update: kun innloggede lærere kan endre sesjonsstatus
+CREATE POLICY "Quiz sessions update" ON public.quiz_sessions FOR UPDATE USING (auth.role() = 'authenticated');
 
 -- Players: Elever (uinnlogget) må kunne lese, sette inn seg selv og oppdatere score
-CREATE POLICY "Quiz players all" ON public.quiz_players FOR ALL USING (true);
+-- Holdes åpent siden elever er ikke-autentiserte
+CREATE POLICY "Quiz players select" ON public.quiz_players FOR SELECT USING (true);
+CREATE POLICY "Quiz players insert" ON public.quiz_players FOR INSERT WITH CHECK (true);
+CREATE POLICY "Quiz players update" ON public.quiz_players FOR UPDATE USING (true);
+
+-- 4. SYSTEM SETTINGS TABLE (for statistikk)
+CREATE TABLE IF NOT EXISTS public.system_settings (
+  key TEXT PRIMARY KEY,
+  value BIGINT DEFAULT 0
+);
+
+-- 5. ATOMISK BESØKSTELLER (forhindrer race conditions)
+CREATE OR REPLACE FUNCTION public.increment_visits()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  INSERT INTO public.system_settings (key, value)
+  VALUES ('total_visits', 1)
+  ON CONFLICT (key) DO UPDATE SET value = system_settings.value + 1;
+END;
+$$;
 

@@ -4,6 +4,7 @@ import { LayoutGrid, Users, Shuffle, RotateCcw, Monitor, GripVertical, Plus, Bar
 import { extractNamesFromImage } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 import { Class, Student } from '../types';
+import { useToast } from '../contexts/ToastContext';
 
 interface Desk {
     id: string;
@@ -14,6 +15,7 @@ interface Desk {
 }
 
 export const SeatingChartGenerator = ({ t }: any) => {
+    const { addToast } = useToast();
     const [inputNames, setInputNames] = useState('');
     const [cols, setCols] = useState(4);
     const [rows, setRows] = useState(6);
@@ -139,12 +141,10 @@ export const SeatingChartGenerator = ({ t }: any) => {
     };
 
     const clearDesks = () => {
-        if (confirm("Vil du fjerne alle pulter?")) {
-            // Move everyone to bench first
-            const studentsInDesks = desks.map(d => d.student).filter(Boolean) as Student[];
-            setBench(prev => [...prev, ...studentsInDesks]);
-            setDesks([]);
-        }
+        const studentsInDesks = desks.map(d => d.student).filter(Boolean) as Student[];
+        setBench(prev => [...prev, ...studentsInDesks]);
+        setDesks([]);
+        addToast("Alle pulter er fjernet.", 'success');
     };
 
     const rotateDesk = (index: number) => {
@@ -257,10 +257,10 @@ export const SeatingChartGenerator = ({ t }: any) => {
                         return current ? current + '\n' + firstNames.join('\n') : firstNames.join('\n');
                     });
                 } else {
-                    alert("Fant ingen navn i bildet.");
+                    addToast("Fant ingen navn i bildet.", 'error');
                 }
             } catch (err) {
-                alert("Kunne ikke analysere bildet.");
+                addToast("Kunne ikke analysere bildet.", 'error');
             } finally {
                 setIsScanning(false);
                 if (fileInputRef.current) fileInputRef.current.value = '';

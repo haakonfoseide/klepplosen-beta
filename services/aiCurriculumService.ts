@@ -1,14 +1,14 @@
 
 import { Type } from "@google/genai";
 import { CompetenceAim } from "../types";
-import { generateContentWithRetry, parseResponse } from "./aiUtils";
+import { generateContentWithRetry, parseResponse, AI_MODELS } from "./aiUtils";
 import { PROMPTS } from "./prompts";
 
 export async function fetchSubjectCodeFromUDIR(subject: string): Promise<string> {
   const prompt = PROMPTS.SUBJECT_CODE(subject);
 
   try {
-    const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, { 
+    const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, { 
         responseMimeType: 'application/json',
         tools: [{ googleSearch: {} }]
     });
@@ -32,7 +32,7 @@ export async function fetchCompetenceAims(subject: string, grade: string, topic:
   }
 
   try {
-    const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, { 
+    const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, { 
         responseMimeType: 'application/json',
         tools: tools
     });
@@ -44,7 +44,7 @@ export async function fetchCompetenceAims(subject: string, grade: string, topic:
 export async function fetchAllSubjectAims(subject: string): Promise<{ grade: string, aims: string[] }[]> {
   const prompt = PROMPTS.ALL_SUBJECT_AIMS(subject);
 
-  const res = await generateContentWithRetry('gemini-3.1-pro-preview', prompt, { 
+  const res = await generateContentWithRetry(AI_MODELS.PRO, prompt, { 
     responseMimeType: 'application/json',
     responseSchema: {
       type: Type.OBJECT,
@@ -71,7 +71,7 @@ export async function fetchAllSubjectAims(subject: string): Promise<{ grade: str
 export async function compareAimsWithCurriculum(subject: string, currentData: {grade: string, aims: string[]}[]): Promise<{ grade: string, status: 'unchanged' | 'updated' | 'new', currentAims: string[], proposedAims: string[], diffNote?: string }[]> {
   const prompt = PROMPTS.COMPARE_AIMS(subject, currentData);
 
-  const res = await generateContentWithRetry('gemini-3.1-pro-preview', prompt, { 
+  const res = await generateContentWithRetry(AI_MODELS.PRO, prompt, { 
     tools: [{ googleSearch: {} }],
     responseMimeType: 'application/json',
     responseSchema: {
@@ -102,7 +102,7 @@ export async function compareAimsWithCurriculum(subject: string, currentData: {g
 export async function adaptAimsForGrade(aims: string[], targetGrade: string, language: string): Promise<string[]> {
     const prompt = PROMPTS.ADAPT_AIMS(aims, targetGrade, language);
 
-    const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, { 
+    const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, { 
         responseMimeType: 'application/json',
         responseSchema: {
             type: Type.ARRAY,
@@ -116,7 +116,7 @@ export async function adaptAimsForGrade(aims: string[], targetGrade: string, lan
 export async function fetchAllCompetenceAims(subject: string, grade: string): Promise<string[]> {
   const prompt = PROMPTS.ALL_COMPETENCE_AIMS(subject, grade);
   try {
-    const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, { 
+    const res = await generateContentWithRetry(AI_MODELS.FLASH, prompt, { 
         responseMimeType: 'application/json',
         responseSchema: {
             type: Type.ARRAY,

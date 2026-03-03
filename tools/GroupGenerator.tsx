@@ -4,8 +4,10 @@ import { Camera, Loader2, Users } from 'lucide-react';
 import { extractNamesFromImage } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 import { Class } from '../types';
+import { useToast } from '../contexts/ToastContext';
 
 export const GroupGenerator = ({ t }: any) => {
+    const { addToast } = useToast();
     const [names, setNames] = useState('');
     const [groupSize, setGroupSize] = useState(4);
     const [groups, setGroups] = useState<string[][]>([]);
@@ -65,10 +67,10 @@ export const GroupGenerator = ({ t }: any) => {
                         return current ? current + '\n' + extractedNames.join('\n') : extractedNames.join('\n');
                     });
                 } else {
-                    alert("Fant ingen navn i bildet.");
+                    addToast("Fant ingen navn i bildet.", 'error');
                 }
             } catch (err) {
-                alert("Kunne ikke analysere bildet.");
+                addToast("Kunne ikke analysere bildet.", 'error');
             } finally {
                 setIsAnalyzing(false);
                 if (fileInputRef.current) fileInputRef.current.value = '';

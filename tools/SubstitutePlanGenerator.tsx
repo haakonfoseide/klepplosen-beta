@@ -5,8 +5,10 @@ import { generateSubstitutePlan } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 import { COMMON_SUBJECTS, GRADES } from '../constants';
 import { SavedPlan, GeneratedTask } from '../types';
+import { useToast } from '../contexts/ToastContext';
 
 export const SubstitutePlanGenerator = ({ t, language, currentUser, isOwner = true, initialData, currentPlanId }: any) => {
+    const { addToast } = useToast();
     const [subject, setSubject] = useState(initialData?.subject || COMMON_SUBJECTS[0]);
     const [grade, setGrade] = useState(initialData?.grade || GRADES[0]);
     const [duration, setDuration] = useState(initialData?.duration || '45 min');
@@ -43,7 +45,7 @@ export const SubstitutePlanGenerator = ({ t, language, currentUser, isOwner = tr
             const res = await generateSubstitutePlan({ subject, grade, duration, topic, equipment, notes }, language, availableAims);
             setResult(res);
         } catch (e) {
-            alert("Feil ved generering: " + e);
+            addToast("Feil ved generering.", 'error');
         } finally {
             setLoading(false);
             setStatusMessage('');
@@ -77,8 +79,6 @@ export const SubstitutePlanGenerator = ({ t, language, currentUser, isOwner = tr
                 creatorId: currentUser.id,
                 isShared: false,
                 isImported: false,
-                likes: 0,
-                likedBy: []
             };
             await storageService.savePlan(planToSave as any);
             setSaveStatus('saved');
