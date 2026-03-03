@@ -292,7 +292,7 @@ export interface QuizQuestion {
 export interface QuizSession {
     id: string;
     pin: string;
-    status: 'lobby' | 'active' | 'reveal' | 'scoreboard' | 'finished';
+    status: 'lobby' | 'active' | 'reveal' | 'scoreboard' | 'reflection' | 'finished';
     currentQuestionIndex: number;
     questions: QuizQuestion[];
     players: QuizPlayer[];
