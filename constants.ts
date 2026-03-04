@@ -5,6 +5,26 @@ import {
   Dumbbell, Utensils, BookText, Languages, Lightbulb
 } from 'lucide-react';
 
+// View name constants — used as the `view` state value in useAppLogic / AppRoutes
+export const VIEWS = {
+  MENU: 'menu',
+  DASHBOARD: 'dashboard',
+  PLAN: 'plan',
+  ARCHIVE: 'archive',
+  GUIDE: 'guide',
+  ORACY: 'oracy',
+  TOOLS: 'tools',
+  BTI_GUIDE: 'bti_guide',
+  LESSON_STUDY: 'lesson_study',
+  MYPAGE: 'mypage',
+  AUTH: 'auth',
+  ADMIN: 'admin',
+  SEILASPLAN: 'seilasplan',
+  EASTER_EGG: 'easter-egg',
+  TEST_DASHBOARD: 'test-dashboard',
+} as const;
+export type View = typeof VIEWS[keyof typeof VIEWS];
+
 // Plan type constants — used as planType in SavedPlan.task
 export const PLAN_TYPES = {
   CL: 'cl',

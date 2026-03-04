@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { supabase } from '../services/storageService';
+import { storageService } from '../services/storageService';
 import { Play, Users, Trophy, X, RefreshCw, Activity, AlertTriangle, CheckCircle2, Calculator } from 'lucide-react';
 import { TimerComponent } from '../CommonComponents';
 import QRCode from 'react-qr-code';
@@ -27,49 +27,30 @@ export const MathHuntGenerator: React.FC<MathHuntGeneratorProps> = ({ t, languag
     }, []);
 
     const fetchPlayers = useCallback(async (sessionId: string) => {
-        const { data } = await supabase.from('quiz_players').select('*').eq('session_id', sessionId);
-        if (data) setPlayers(data);
+        const data = await storageService.fetchSessionPlayers(sessionId);
+        setPlayers(data);
     }, []);
 
     const subscribeToPlayers = useCallback((sessionId: string) => {
-        const channel = supabase.channel(`mathhunt_lobby_${sessionId}`)
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'quiz_players',
-                filter: `session_id=eq.${sessionId}` 
-            }, () => {
-                fetchPlayers(sessionId);
-            })
-            .subscribe();
-        return () => { supabase.removeChannel(channel); };
+        return storageService.subscribeToSessionPlayers(sessionId, () => {
+            fetchPlayers(sessionId);
+        });
     }, [fetchPlayers]);
 
     const handleCreateSession = async () => {
         setIsLoading(true);
         const pin = Math.floor(100000 + Math.random() * 900000).toString();
-        
+
         try {
-            const { data, error } = await supabase.from('quiz_sessions').insert({
-                pin_code: pin,
-                status: 'lobby',
-                current_question_index: 0,
-                quiz_data: [],
-                config: { 
-                    playMode: 'math_hunt', 
-                    topic: topic === 'custom' ? customTopic : topic,
-                    startLevel
-                }
-            }).select().single();
-
-            if (error) throw error;
-
-            if (data) {
-                setSession(data);
-                setStep('lobby');
-                cleanupSubscriptionRef.current?.();
-                cleanupSubscriptionRef.current = subscribeToPlayers(data.id);
-            }
+            const data = await storageService.createMathHuntSession(
+                pin,
+                topic === 'custom' ? customTopic : topic,
+                startLevel
+            );
+            setSession(data);
+            setStep('lobby');
+            cleanupSubscriptionRef.current?.();
+            cleanupSubscriptionRef.current = subscribeToPlayers(data.id);
         } catch (e) {
             console.error(e);
         } finally {
@@ -79,14 +60,14 @@ export const MathHuntGenerator: React.FC<MathHuntGeneratorProps> = ({ t, languag
 
     const handleStartGame = async () => {
         if (!session) return;
-        await supabase.from('quiz_sessions').update({ status: 'active' }).eq('id', session.id);
+        await storageService.updateQuizSessionStatus(session.id, 'active');
         setSession({ ...session, status: 'active' });
         setStep('active');
     };
 
     const handleEndGame = async () => {
         if (!session) return;
-        await supabase.from('quiz_sessions').update({ status: 'finished' }).eq('id', session.id);
+        await storageService.updateQuizSessionStatus(session.id, 'finished');
         await fetchPlayers(session.id);
         setSession({ ...session, status: 'finished' });
         cleanupSubscriptionRef.current?.();

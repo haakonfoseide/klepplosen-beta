@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { Component } from 'react';
 import { 
   X, Briefcase, Users, MessageSquare, Mic2, 
   Gamepad2, Wand2, Grid3X3, ArrowRight, Dices, 
@@ -16,6 +16,28 @@ import {
 } from './ToolComponents';
 import { TimerComponent } from './CommonComponents';
 import { CLStructure } from './types';
+
+class ToolErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(err: Error) { console.error('Tool error:', err); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[300px] text-center space-y-4 p-8">
+          <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto">
+            <X size={28} />
+          </div>
+          <div>
+            <p className="font-black text-slate-700 uppercase tracking-tight">Verktøyet støtte på en feil</p>
+            <p className="text-slate-400 text-sm mt-1">Prøv å laste siden på nytt.</p>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 interface ClassroomToolsViewProps {
   onBack: () => void;
@@ -122,6 +144,7 @@ export const ClassroomToolsView: React.FC<ClassroomToolsViewProps> = ({
           <button onClick={handleBackToTools} className="p-3 bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-all active:scale-95"><X size={20}/></button>
         </div>
         <div className="bg-white p-5 sm:p-10 rounded-[2.5rem] sm:rounded-[3.5rem] shadow-2xl border border-slate-50 min-h-[500px]">
+          <ToolErrorBoundary>
           {activeTool === 'math_hunt' && <MathHuntGenerator t={t} language={language} currentUser={currentUser} />}
           {activeTool === 'behavior' && <BehaviorGuide t={t} language={language} />}
           {activeTool === 'quiz' && <QuizGame t={t} language={language} currentUser={currentUser} isOwner={isOwner} initialData={initialData} currentPlanId={state.currentPlanId} />}
@@ -143,16 +166,17 @@ export const ClassroomToolsView: React.FC<ClassroomToolsViewProps> = ({
           {activeTool === 'icebreaker' && <AIGenerator type="icebreaker" placeholder={t.themePlaceholder} icon={Zap} color="bg-cyan-100" t={t} language={language} currentUser={currentUser} isOwner={isOwner} initialData={initialData} currentPlanId={state.currentPlanId} />}
           {activeTool === 'debate' && <AIGenerator type="debater" placeholder={t.themePlaceholder} icon={MessageSquare} color="bg-pink-100" t={t} language={language} currentUser={currentUser} isOwner={isOwner} initialData={initialData} currentPlanId={state.currentPlanId} />}
           {['starters', 'alias', 'terms', 'roles', 'assessment', 'rhetoric'].includes(activeTool) && (
-              <UnifiedOracyGenerator 
-                type={activeTool} 
-                t={t} 
-                language={language} 
-                currentUser={currentUser} 
+              <UnifiedOracyGenerator
+                type={activeTool}
+                t={t}
+                language={language}
+                currentUser={currentUser}
                 initialData={initialData}
                 isOwner={isOwner}
                 currentPlanId={state.currentPlanId}
               />
           )}
+          </ToolErrorBoundary>
         </div>
       </div>
     );

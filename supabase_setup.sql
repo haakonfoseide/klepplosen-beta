@@ -103,7 +103,13 @@ CREATE TABLE IF NOT EXISTS public.system_settings (
   value BIGINT DEFAULT 0
 );
 
--- 5. ATOMISK BESØKSTELLER (forhindrer race conditions)
+-- 5. INDEKSER FOR VANLIGE SPØRRINGSMØNSTRE
+CREATE INDEX IF NOT EXISTS idx_plans_creator_id ON public.plans ("creatorId");
+CREATE INDEX IF NOT EXISTS idx_plans_is_shared ON public.plans ("isShared") WHERE "isShared" = true;
+CREATE INDEX IF NOT EXISTS idx_quiz_players_session_id ON public.quiz_players (session_id);
+CREATE INDEX IF NOT EXISTS idx_quiz_sessions_pin_code ON public.quiz_sessions (pin_code);
+
+-- 6. ATOMISK BESØKSTELLER (forhindrer race conditions)
 CREATE OR REPLACE FUNCTION public.increment_visits()
 RETURNS void
 LANGUAGE plpgsql

@@ -165,9 +165,39 @@ export const storageService = {
     };
   },
 
-  // Quiz
+  // Quiz sessions (shared by QuizGame and MathHuntGenerator)
   deleteQuizSession: async (sessionId: string): Promise<void> => {
       await supabase.from('quiz_sessions').delete().eq('id', sessionId);
+  },
+  createMathHuntSession: async (pin: string, topic: string, startLevel: number) => {
+      const { data, error } = await supabase.from('quiz_sessions').insert({
+          pin_code: pin,
+          status: 'lobby',
+          current_question_index: 0,
+          quiz_data: [],
+          config: { playMode: 'math_hunt', topic, startLevel }
+      }).select().single();
+      if (error) throw error;
+      return data;
+  },
+  updateQuizSessionStatus: async (sessionId: string, status: string): Promise<void> => {
+      const { error } = await supabase.from('quiz_sessions').update({ status }).eq('id', sessionId);
+      if (error) throw error;
+  },
+  fetchSessionPlayers: async (sessionId: string) => {
+      const { data } = await supabase.from('quiz_players').select('*').eq('session_id', sessionId);
+      return data || [];
+  },
+  subscribeToSessionPlayers: (sessionId: string, onUpdate: () => void) => {
+      const channel = supabase.channel(`mathhunt_lobby_${sessionId}`)
+          .on('postgres_changes', {
+              event: '*',
+              schema: 'public',
+              table: 'quiz_players',
+              filter: `session_id=eq.${sessionId}`
+          }, onUpdate)
+          .subscribe();
+      return () => { supabase.removeChannel(channel); };
   },
 
   // Classes & Students
