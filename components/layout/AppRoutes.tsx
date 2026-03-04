@@ -65,7 +65,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ appLogic, t, refreshStruct
   return (
     <>
       {/* Global Quick Tools - Accessible everywhere except student view (handled in App.tsx) */}
-      <QuickTools t={t} language={state.languageForm} />
+      <QuickTools t={t} />
 
       {(() => {
         switch (view) {

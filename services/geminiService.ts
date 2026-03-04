@@ -251,14 +251,14 @@ Fokuser på innsats og mestring. Bruk et barnevennlig språk.`;
 
 export async function generateMathProblem(topic: string, level: number, grade?: string): Promise<{q: string, a: number} | null> {
     const gradeContext = grade ? `Tilpasset kompetansemål for ${grade}. trinn.` : '';
-    const prompt = `Lag en matteoppgave for en elev på barneskolen.
-Tema: ${topic}
+    const prompt = `Lag en kort tekstoppgave i matematikk for en elev på barneskolen.
+Tema/Kontekst: ${topic}
 Vanskelighetsgrad (1-10): ${level}
 ${gradeContext}
 
-Svaret MÅ være et heltall.
+Svaret MÅ være et tall (heltall eller desimaltall).
 Returner KUN et JSON-objekt på formatet: {"q": "oppgavetekst", "a": tall}
-Eksempel: {"q": "5 + 5", "a": 10}`;
+Eksempel: {"q": "Hvis du har 3 epler og får 2 til, hvor mange har du da?", "a": 5}`;
 
     try {
         const res = await generateContentWithRetry('gemini-3-flash-preview', prompt, {

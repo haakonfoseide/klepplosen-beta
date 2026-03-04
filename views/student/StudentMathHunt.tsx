@@ -32,6 +32,9 @@ export const StudentMathHunt: React.FC<StudentMathHuntProps> = ({
     const [isGeneratingReport, setIsGeneratingReport] = useState(false);
     const [isLoadingProblem, setIsLoadingProblem] = useState(false);
 
+    const [localScore, setLocalScore] = useState(playerScore);
+    const [localStreak, setLocalStreak] = useState(playerStreak);
+
     const generateProblem = useCallback(async (currentLevel: number) => {
         const topic = session.config?.topic || 'addition';
         const grade = session.config?.grade || '5. trinn';
@@ -149,24 +152,23 @@ export const StudentMathHunt: React.FC<StudentMathHuntProps> = ({
     };
 
     const handleSubmit = async () => {
-        if (!problem || !answer || feedback !== 'idle') return;
-
-        const numAnswer = parseInt(answer, 10);
-        if (isNaN(numAnswer)) return;
+        if (!problem || !answer) return;
+        
+        const numAnswer = parseFloat(answer.replace(',', '.'));
         const isCorrect = numAnswer === problem.a;
-
+        
         setFeedback(isCorrect ? 'correct' : 'wrong');
-
-        let newScore = playerScore;
-        let newStreak = playerStreak;
+        
+        let newScore = localScore;
+        let newStreak = localStreak;
         let newLevel = level;
         let newTeam = 'green'; // status color
-
+        
         if (isCorrect) {
             newScore += 1;
             newStreak += 1;
             if (newStreak >= 3) {
-                newLevel = Math.min(newLevel + 1, 20);
+                newLevel += 1;
                 newStreak = 0;
             }
             newTeam = 'green';
@@ -176,6 +178,8 @@ export const StudentMathHunt: React.FC<StudentMathHuntProps> = ({
         }
 
         setLevel(newLevel);
+        setLocalScore(newScore);
+        setLocalStreak(newStreak);
         
         // Update Supabase
         await supabase.from('quiz_players').update({
@@ -226,7 +230,7 @@ export const StudentMathHunt: React.FC<StudentMathHuntProps> = ({
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                             <p className="text-xs font-black uppercase tracking-widest text-slate-400">Løst</p>
-                            <p className="text-3xl font-black text-emerald-600">{playerScore}</p>
+                            <p className="text-3xl font-black text-emerald-600">{localScore}</p>
                         </div>
                         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                             <p className="text-xs font-black uppercase tracking-widest text-slate-400">Nivå</p>
@@ -296,7 +300,7 @@ export const StudentMathHunt: React.FC<StudentMathHuntProps> = ({
                         </div>
                         <div>
                             <span className="block text-[10px] font-black uppercase tracking-widest text-slate-400">Løst</span>
-                            <span className="font-black text-emerald-600">{playerScore}</span>
+                            <span className="font-black text-emerald-600">{localScore}</span>
                         </div>
                     </div>
                 </div>
